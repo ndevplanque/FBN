@@ -1,0 +1,43 @@
+.App-logo {
+    width: 160px;
+
+    height: 160px;
+    line-height: 160px;
+
+    margin: 20px;
+    background-color: #B4DDFF;
+    font-size: 24px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* .App-logo {
+    width: 100%;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .App-logo {
+        animation: App-logo-spin infinite 20s linear;
+    }
+}
+
+@keyframes App-logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+} */
