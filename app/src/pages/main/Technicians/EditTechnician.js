@@ -2,20 +2,21 @@ import React, { Fragment, Component } from 'react'
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import SubmitButtonWithAlert from '../../../components/SubmitButtonWithAlert';
 
 export default class Edit extends Component {
     state = {
         technicien: {},
+        dbRow: "",
         isLoaded: false,
         error: null,
         errors: [],
-        matricule: "",
+        alert: {}
     }
 
     constructor(props) {
         const index = window.location.href.split("/").length - 1;
-        const matricule = window.location.href.split("/")[index].split("?")[0];
+        const dbRow = window.location.href.split("/")[index].split("?")[0];
         super(props);
         this.state = {
             technicien: {
@@ -34,10 +35,16 @@ export default class Edit extends Component {
                 telephone: "",
                 agence: "",
             },
+            dbRow: dbRow,
             isLoaded: false,
             error: null,
             errors: [],
-            matricule: matricule,
+            alert: {
+                severity: "",
+                message: "",
+                isOpen: false
+            },
+
         }
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -50,21 +57,37 @@ export default class Edit extends Component {
         if (this.state.technicien.matricule === "") {
             errors.push("matricule");
         }
-
         this.setState({ errors: errors });
-
         if (errors.length > 0) {
             return false;
         }
 
+        const data = new FormData(evt.target);
+        data.append("dbRow", this.state.dbRow);
+        const payload = Object.fromEntries(data.entries());
+
         const requestOptions = {
             method: 'POST',
-            body: JSON.stringify(this.state.technicien),
+            body: JSON.stringify(payload),
         }
         fetch("http://localhost:4000/v1/admin/edittechnicien", requestOptions)
             .then(response => response.json())
             .then(data => {
-                console.log(data);
+                if (data.error) {
+                    this.setState({
+                        alert: {
+                            severity: "error",
+                            message: "Erreur dans le formulaire"
+                        }
+                    })
+                } else {
+                    this.setState({
+                        alert: {
+                            severity: "success",
+                            message: "Envoyé avec succès"
+                        }
+                    })
+                }
             })
     };
 
@@ -84,8 +107,8 @@ export default class Edit extends Component {
     }
 
     componentDidMount() {
-        if (this.state.matricule !== "nouveau") {
-            fetch("http://localhost:4000/v1/technicien/" + this.state.matricule)
+        if (this.state.dbRow !== "nouveau") {
+            fetch("http://localhost:4000/v1/technicien/" + this.state.dbRow)
                 .then((response) => {
                     if (response.status !== "200") {
                         let err = Error;
@@ -100,7 +123,7 @@ export default class Edit extends Component {
                     const dateQualification = new Date(json.technicien.dateQualification).toISOString().split("T")[0];
                     this.setState({
                         technicien: {
-                            matricule: this.state.matricule,
+                            matricule: json.technicien.matricule,
                             sexe: json.technicien.sexe,
                             nom: json.technicien.nom,
                             prenom: json.technicien.prenom,
@@ -129,7 +152,7 @@ export default class Edit extends Component {
             this.setState({ isLoaded: true });
         }
     }
-
+    
     render() {
         let { technicien, isLoaded, error } = this.state;
         if (error) {
@@ -137,21 +160,16 @@ export default class Edit extends Component {
         } else if (!isLoaded) {
             return <p>Chargement...</p>
         } else {
-            // if(this.state.matricule=="nouveau"){
-            //     technicien.dateEmbauche="2020-01-01";
-            //     technicien.dateQualification="2020-01-01";
-            // }
             return (
                 <>
                     <h2>Ajouter/modifier un technicien</h2>
                     <br />
                     <Stack noValidate direction="column" justifyContent="center" alignItems="flex-start" spacing={2} component="form" onSubmit={this.handleSubmit} autoComplete="off">
                         <hr />
-
-
                         <Typography>Identité</Typography>
                         <TextField
                             required
+                            name="matricule"
                             id="matricule"
                             label="Matricule"
                             value={technicien.matricule}
@@ -159,8 +177,10 @@ export default class Edit extends Component {
                             error={this.hasError("matricule")}
                             helperText={this.hasError("matricule") ? "Matricule incorrect." : ""}
                         />
+
                         <TextField
                             type="text"
+                            name="sexe"
                             id="sexe"
                             label="Sexe"
                             value={technicien.sexe}
@@ -168,6 +188,7 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="text"
+                            name="nom"
                             id="nom"
                             label="Nom"
                             value={technicien.nom}
@@ -175,6 +196,7 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="text"
+                            name="prenom"
                             id="prenom"
                             label="Prenom"
                             value={technicien.prenom}
@@ -185,6 +207,7 @@ export default class Edit extends Component {
                         <Typography>Adresse</Typography>
                         <TextField
                             type="text"
+                            name="adresse"
                             id="adresse"
                             label="Adresse"
                             value={technicien.adresse}
@@ -192,6 +215,7 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="text"
+                            name="codePostal"
                             id="codePostal"
                             label="Code Postal"
                             value={technicien.codePostal}
@@ -199,6 +223,7 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="text"
+                            name="ville"
                             id="ville"
                             label="Ville"
                             value={technicien.ville}
@@ -206,6 +231,7 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="text"
+                            name="pays"
                             id="pays"
                             label="Pays"
                             value={technicien.pays}
@@ -216,6 +242,7 @@ export default class Edit extends Component {
                         <Typography>Parcours</Typography>
                         <TextField
                             type="date"
+                            name="dateEmbauche"
                             id="dateEmbauche"
                             label="Date Embauche"
                             value={technicien.dateEmbauche}
@@ -224,6 +251,7 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="text"
+                            name="qualification"
                             id="qualification"
                             label="Qualification"
                             value={technicien.qualification}
@@ -231,6 +259,7 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="date"
+                            name="dateQualification"
                             id="dateQualification"
                             label="Date Qualification"
                             value={technicien.dateQualification}
@@ -242,6 +271,7 @@ export default class Edit extends Component {
                         <Typography>Contacts</Typography>
                         <TextField
                             type="email"
+                            name="email"
                             id="email"
                             label="Email"
                             value={technicien.email}
@@ -249,21 +279,31 @@ export default class Edit extends Component {
                         />
                         <TextField
                             type="text"
+                            name="telephone"
                             id="telephone"
                             label="Telephone"
                             value={technicien.telephone}
                             onChange={this.handleChange}
                         />
+                        <TextField
+                            type="agence"
+                            name="agence"
+                            id="agence"
+                            label="Agence"
+                            value={technicien.agence}
+                            onChange={this.handleChange}
+                        />
 
 
                         <hr />
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                        >
-                            Enregistrer
-                        </Button>
+                        <SubmitButtonWithAlert
+                            btnVariant="contained"
+                            btnColor="primary"
+                            btnText="Enregistrer"
+                            severity={this.state.alert.severity}
+                            message={this.state.alert.message}
+                        />
+                            
                     </Stack>
                     {/* <pre>{JSON.stringify(this.state, null, 3)}</pre> */}
                 </>
