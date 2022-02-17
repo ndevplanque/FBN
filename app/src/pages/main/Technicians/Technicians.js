@@ -7,9 +7,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Stack, Button } from "@mui/material";
-// import IconButton from '@mui/material/IconButton';
-// import EditIcon from '@mui/icons-material/Edit';
-// import DeleteIcon from '@mui/icons-material/Delete';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 
 export default class Technicians extends Component {
@@ -106,24 +106,12 @@ export default class Technicians extends Component {
                                         <TableCell align="left">{technicien.telephone}</TableCell>
                                         <TableCell align="left">{technicien.agence}</TableCell>
                                         <TableCell align="left">
-                                            <Button 
-                                            variant="contained"
-                            color="primary"
-                            >
-                                Mod
-                            </Button>
-                                            <Button 
-                                            variant="contained"
-                            color="primary"
-                            >
-                                Suppr
-                            </Button>
-                                            {/* <IconButton aria-label="edit" href={"/technicien/"+technicien.matricule} > */}
-                                                {/* <EditIcon /> */}
-                                            {/* </IconButton> */}
-                                            {/* <IconButton aria-label="delete"> */}
-                                                {/* <DeleteIcon /> */}
-                                            {/* </IconButton> */}
+                                            <IconButton aria-label="edit" href={"/technicien/" + technicien.matricule} >
+                                                <EditIcon />
+                                            </IconButton>
+                                            <IconButton aria-label="delete">
+                                                <DeleteIcon />
+                                            </IconButton>
                                         </TableCell>
                                     </TableRow>
                                 ))}
