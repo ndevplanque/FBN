@@ -61,7 +61,26 @@ func (app *application) HGetAllTechniciens(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+	matricule := params.ByName("matricule")
 
+	err := app.models.DB.QDeleteTechnicien(matricule)
+	if err != nil {
+		err = errors.New("échec de la suppression : " + err.Error())
+		app.errorJSON(w, err)
+		return
+	}
+
+	ok := jsonResponse{
+		OK: true,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, ok, "response")
+	if err != nil {
+		err = errors.New("échec de l'envoi JSON : " + err.Error())
+		app.errorJSON(w, err)
+		return
+	}
 }
 
 type TechnicienPayload struct {
@@ -79,13 +98,14 @@ type TechnicienPayload struct {
 	Email             string `json:"email"`
 	Telephone         string `json:"telephone"`
 	Agence            string `json:"agence"`
-	DbRow             string `json:"dbRow"`
 	// foreign key (agence) references Agence (agence)
 }
 
 func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request) {
-	var payload TechnicienPayload
+	params := httprouter.ParamsFromContext(r.Context())
+	oldMatricule := params.ByName("oldMatricule")
 
+	var payload TechnicienPayload
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		err = errors.New("échec lors du décodage du JSON pour l'édition d'un technicien : " + err.Error())
@@ -110,14 +130,14 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request) 
 	technicien.Telephone = payload.Telephone
 	technicien.Agence = payload.Agence
 
-	if payload.DbRow == "nouveau" {
+	if oldMatricule == "nouveau" {
 		err = app.models.DB.QInsertTechnicien(technicien)
 		if err != nil {
 			app.errorJSON(w, err)
 			return
 		}
 	} else {
-		err = app.models.DB.QUpdateTechnicien(technicien, payload.DbRow)
+		err = app.models.DB.QUpdateTechnicien(oldMatricule, technicien)
 		if err != nil {
 			app.errorJSON(w, err)
 			return

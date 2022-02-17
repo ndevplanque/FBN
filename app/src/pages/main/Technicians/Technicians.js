@@ -9,7 +9,7 @@ import Paper from '@mui/material/Paper';
 import { Stack, Button } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIconWithConfirm from '../../../components/DeleteIconWithConfirm';
 
 
 export default class Technicians extends Component {
@@ -48,9 +48,7 @@ export default class Technicians extends Component {
     }
 
     render() {
-
         const { techniciens, isLoaded, error } = this.state;
-
         if (error) {
             return <div>Erreur {error.message}</div>
         }
@@ -109,9 +107,14 @@ export default class Technicians extends Component {
                                             <IconButton aria-label="edit" href={"/technicien/" + technicien.matricule} >
                                                 <EditIcon />
                                             </IconButton>
-                                            <IconButton aria-label="delete">
-                                                <DeleteIcon />
-                                            </IconButton>
+                                            <DeleteIconWithConfirm
+                                                titre={`Supprimer ${technicien.prenom} ${technicien.nom} (${technicien.matricule}) ?`}
+                                                message="Êtes-vous sûr ?"
+                                                deleteUrl={`http://localhost:4000/v1/technicien/delete/${technicien.matricule}`}
+                                                onDelete={() => { 
+                                                    this.setState({techniciens:techniciens.filter(item => item !== technicien)})
+                                                }}
+                                            />
                                         </TableCell>
                                     </TableRow>
                                 ))}
