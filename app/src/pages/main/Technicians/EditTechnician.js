@@ -41,8 +41,7 @@ export default class Edit extends Component {
             errors: [],
             alert: {
                 severity: "",
-                message: "",
-                isOpen: false
+                message: ""
             },
 
         }
