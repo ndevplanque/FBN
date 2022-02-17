@@ -130,7 +130,7 @@ func (m *FBNModel) QInsertTechnicien(technicien Technicien) error {
 	return nil
 }
 
-func (m *FBNModel) QUpdateTechnicien(technicien Technicien, dbRow string) error {
+func (m *FBNModel) QUpdateTechnicien(oldMatricule string, technicien Technicien) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := `
@@ -156,7 +156,7 @@ func (m *FBNModel) QUpdateTechnicien(technicien Technicien, dbRow string) error 
 		technicien.Email,
 		technicien.Telephone,
 		technicien.Agence,
-		dbRow,
+		oldMatricule,
 	)
 
 	if err != nil {
@@ -164,4 +164,22 @@ func (m *FBNModel) QUpdateTechnicien(technicien Technicien, dbRow string) error 
 	}
 
 	return nil
+}
+
+func (m *FBNModel) QDeleteTechnicien(matricule string) error {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	query := `
+	DELETE FROM technicien
+	WHERE matricule = $1
+	`
+	_, err := m.DB.ExecContext(ctx, query, matricule)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

@@ -6,8 +6,8 @@ import SubmitButtonWithAlert from '../../../components/SubmitButtonWithAlert';
 
 export default class Edit extends Component {
     state = {
+        oldMatricule: "",
         technicien: {},
-        dbRow: "",
         isLoaded: false,
         error: null,
         errors: [],
@@ -16,9 +16,10 @@ export default class Edit extends Component {
 
     constructor(props) {
         const index = window.location.href.split("/").length - 1;
-        const dbRow = window.location.href.split("/")[index].split("?")[0];
+        const oldMatricule = window.location.href.split("/")[index].split("?")[0];
         super(props);
         this.state = {
+            oldMatricule: oldMatricule,
             technicien: {
                 matricule: "",
                 sexe: "",
@@ -35,7 +36,6 @@ export default class Edit extends Component {
                 telephone: "",
                 agence: "",
             },
-            dbRow: dbRow,
             isLoaded: false,
             error: null,
             errors: [],
@@ -62,14 +62,13 @@ export default class Edit extends Component {
         }
 
         const data = new FormData(evt.target);
-        data.append("dbRow", this.state.dbRow);
         const payload = Object.fromEntries(data.entries());
 
         const requestOptions = {
             method: 'POST',
             body: JSON.stringify(payload),
         }
-        fetch("http://localhost:4000/v1/admin/edittechnicien", requestOptions)
+        fetch("http://localhost:4000/v1/technicien/edit/" + this.state.oldMatricule, requestOptions)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -106,8 +105,8 @@ export default class Edit extends Component {
     }
 
     componentDidMount() {
-        if (this.state.dbRow !== "nouveau") {
-            fetch("http://localhost:4000/v1/technicien/" + this.state.dbRow)
+        if (this.state.oldMatricule !== "nouveau") {
+            fetch("http://localhost:4000/v1/technicien/get" + this.state.oldMatricule)
                 .then((response) => {
                     if (response.status !== "200") {
                         let err = Error;
@@ -151,7 +150,7 @@ export default class Edit extends Component {
             this.setState({ isLoaded: true });
         }
     }
-    
+
     render() {
         let { technicien, isLoaded, error } = this.state;
         if (error) {
@@ -302,7 +301,7 @@ export default class Edit extends Component {
                             severity={this.state.alert.severity}
                             message={this.state.alert.message}
                         />
-                            
+
                     </Stack>
                     {/* <pre>{JSON.stringify(this.state, null, 3)}</pre> */}
                 </>
