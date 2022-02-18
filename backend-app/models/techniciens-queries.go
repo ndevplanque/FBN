@@ -5,7 +5,9 @@ import (
 	"time"
 )
 
-// GetTechnicien renvoie un technicien et une erreur s'il y en a une
+// Les fonctions commençant par Q consistent en des requêtes SQL.
+
+// QGetTechnicien renvoie un technicien selon son matricule ou une erreur
 func (m *FBNModel) QTechnicienById(matricule string) (*Technicien, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -47,7 +49,7 @@ func (m *FBNModel) QTechnicienById(matricule string) (*Technicien, error) {
 	return &technicien, nil
 }
 
-// AllTechniciens renvoie tous les techniciens et une erreur s'il y en a une
+// QAllTechniciens renvoie tous les techniciens ou une erreur
 func (m *FBNModel) QAllTechniciens() ([]*Technicien, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -94,6 +96,7 @@ func (m *FBNModel) QAllTechniciens() ([]*Technicien, error) {
 	return techniciens, nil
 }
 
+// QInsertTechnicien ajoute un technicien dans la BDD ou renvoie une erreur
 func (m *FBNModel) QInsertTechnicien(technicien Technicien) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -130,6 +133,7 @@ func (m *FBNModel) QInsertTechnicien(technicien Technicien) error {
 	return nil
 }
 
+// QUpdateTechnicien modifie le technicien de matricule "oldMatricule" ou renvoie une erreur
 func (m *FBNModel) QUpdateTechnicien(oldMatricule string, technicien Technicien) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -166,6 +170,7 @@ func (m *FBNModel) QUpdateTechnicien(oldMatricule string, technicien Technicien)
 	return nil
 }
 
+// QDeleteTechnicien supprime un technicien de la BDD ou renvoie une erreur
 func (m *FBNModel) QDeleteTechnicien(matricule string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

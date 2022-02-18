@@ -9,15 +9,20 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// Les fonctions commençant par H consistent en des Handlers.
+
+// jsonResponse permet de créer des éléments JSON correspondant au format "nom_propriete":valeur
 type jsonResponse struct {
 	OK      bool   `json:"ok"`
 	Message string `json:"message"`
 }
 
-func (app *application) HGetOneTechnicien(w http.ResponseWriter, r *http.Request) {
-	// récuperer le matricule dans l'url (voir routes.go)
-	params := httprouter.ParamsFromContext(r.Context())
-	matricule := params.ByName("matricule")
+// HGetOneTechnicien est le handler permettant de consulter un technicien en particulier par son matricule.
+// Il est appelé par l'URL "/v1/technicien/get/:matricule".
+func (app *application) HGetOneTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+	// récuperer :matricule
+	matricule := ps.ByName("matricule")
 	if matricule == "" {
 		err := errors.New("renseignez un matricule (" + matricule + " incorrect)")
 		app.errorJSON(w, err)
@@ -42,7 +47,10 @@ func (app *application) HGetOneTechnicien(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (app *application) HGetAllTechniciens(w http.ResponseWriter, r *http.Request) {
+// HGetAllTechnicien est le handler permettant de consulter l'ensemble des techniciens.
+// Il est appelé par l'URL "/v1/techniciens".
+func (app *application) HGetAllTechniciens(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
 	// exécuter la requête SQL
 	techniciens, err := app.models.DB.QAllTechniciens()
 	if err != nil {
@@ -60,10 +68,14 @@ func (app *application) HGetAllTechniciens(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-	matricule := params.ByName("matricule")
+// HDeleteTechnicien est le handler permettant de supprimer un technicien selon son matricule.
+// Il est appelé par l'URL "/v1/technicien/delete/:matricule".
+func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
+	// récuperer :matricule
+	matricule := ps.ByName("matricule")
+
+	// exécuter la requête SQL
 	err := app.models.DB.QDeleteTechnicien(matricule)
 	if err != nil {
 		err = errors.New("échec de la suppression : " + err.Error())
@@ -71,11 +83,8 @@ func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	ok := jsonResponse{
-		OK: true,
-	}
-
-	err = app.writeJSON(w, http.StatusOK, ok, "response")
+	// retourner une réponse positive
+	err = app.writeJSON(w, http.StatusOK, jsonResponse{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
@@ -83,6 +92,9 @@ func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// TechnicienPayload est le modèle de données qui n'inclut seulement que les champs du formulaire.
+// Si on décidait d'enlever le matricule et l'email du formulaire, il faudrait les enlever de TechnicienPayload.
+// Ils seraient ensuite calculées dans le handler et passés séparement à la variable de modèle Technicien.
 type TechnicienPayload struct {
 	Matricule         string `json:"matricule"`
 	Sexe              string `json:"sexe"` // https://golangbyexample.com/character-in-go/
@@ -101,10 +113,18 @@ type TechnicienPayload struct {
 	// foreign key (agence) references Agence (agence)
 }
 
-func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request) {
-	params := httprouter.ParamsFromContext(r.Context())
-	oldMatricule := params.ByName("oldMatricule")
+// HEditTechnicien est le handler pour la création et la modification des techniciens dans la BDD.
+// Il est appelé par l'URL "/v1/technicien/edit/:oldMatricule".
+// Si :oldMatricule vaut "nouveau", on crée un nouveau technicien.
+// Sinon on modifie le technicien portant ce matricule.
+// Les données utilisées proviennent du JSON envoyé par la requête HTTP de méthode POST à cet URL.
+// Le JSON reçu doit correspondre au modèle "TechnicienPayload".
+func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
+	// récuperer :oldMatricule
+	oldMatricule := ps.ByName("oldMatricule")
+
+	// lire le JSON
 	var payload TechnicienPayload
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
@@ -113,8 +133,8 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// assigner les valeurs du JSON à une variable suivant le modèle Technicien
 	var technicien models.Technicien
-
 	technicien.Matricule = payload.Matricule
 	technicien.Sexe = payload.Sexe
 	technicien.Nom = payload.Nom
@@ -130,6 +150,7 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request) 
 	technicien.Telephone = payload.Telephone
 	technicien.Agence = payload.Agence
 
+	// choix de la requête SQL à exécuter
 	if oldMatricule == "nouveau" {
 		err = app.models.DB.QInsertTechnicien(technicien)
 		if err != nil {
@@ -144,10 +165,8 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	ok := jsonResponse{
-		OK: true,
-	}
-	err = app.writeJSON(w, http.StatusOK, ok, "response")
+	// retourner une réponse positive
+	err = app.writeJSON(w, http.StatusOK, jsonResponse{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
@@ -155,6 +174,6 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (app *application) HSearchTechniciens(w http.ResponseWriter, r *http.Request) {
+func (app *application) HSearchTechniciens(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 }

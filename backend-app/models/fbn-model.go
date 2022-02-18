@@ -2,12 +2,12 @@ package models
 
 import "database/sql"
 
-// FBNModel est le nom du model de la BDD "fbn"
+// FBNModel est le nom du modèle de la BDD "fbn"
 type FBNModel struct {
 	DB *sql.DB
 }
 
-// Agence est le type pour les agences
+// Agence est le modèle pour les agences
 type Agence struct {
 	Agence     string `json:"agence"`
 	Nom        string `json:"nom"`
@@ -18,7 +18,7 @@ type Agence struct {
 	Email      string `json:"email"`
 }
 
-// Client est le type pour les clients
+// Client est le modèle pour les clients
 type Client struct {
 	Client             string  `json:"client"`
 	RaisonSociale      string  `json:"raisonSociale"`
@@ -44,7 +44,7 @@ type Concerner struct {
 	// foreign key (serie) references Materiel (serie)
 }
 
-// Contrat est le type pour les contrats
+// Contrat est le modèle pour les contrats
 type Contrat struct {
 	Contrat            string `json:"contrat"`
 	DateSignature      string `json:"dateSignature"`
@@ -53,7 +53,7 @@ type Contrat struct {
 	// foreign key (client) references Client (client)
 }
 
-// Gerant est le type pour les gérants
+// Gerant est le modèle pour les gérants
 type Gerant struct {
 	Matricule    string `json:"matricule"`
 	Sexe         string `json:"sexe"` // https://golangbyexample.com/character-in-go/
@@ -68,7 +68,7 @@ type Gerant struct {
 	// foreign key (agence) references Agence (agence)
 }
 
-// Intervention est le type pour les interventions
+// Intervention est le modèle pour les interventions
 type Intervention struct {
 	Intervention string `json:"Intervention"`
 	DateHeure    string `json:"dateHeure"`
@@ -79,7 +79,7 @@ type Intervention struct {
 	// foreign key (client) references Client (client)
 }
 
-// Materiel est le type pour les matériels
+// Materiel est le modèle pour les matériels
 type Materiel struct {
 	Serie            string  `json:"Serie"`
 	DateVente        string  `json:"dateVente"`
@@ -92,7 +92,7 @@ type Materiel struct {
 	// foreign key (contrat) references Contrat (contrat)
 }
 
-// Technicien est le type pour les techniciens
+// Technicien est le modèle pour les techniciens
 type Technicien struct {
 	Matricule         string `json:"matricule"`
 	Sexe              string `json:"sexe"` // https://golangbyexample.com/character-in-go/
@@ -111,7 +111,7 @@ type Technicien struct {
 	// foreign key (agence) references Agence (agence)
 }
 
-// Type est le type pour les types de matériel
+// Type est le modèle pour les types de matériel
 type Type struct {
 	Reference string `json:"reference"`
 	Libelle   string `json:"libelle"`
