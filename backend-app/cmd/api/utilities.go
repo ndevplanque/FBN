@@ -5,6 +5,12 @@ import (
 	"net/http"
 )
 
+// jsonResponse permet de créer des éléments JSON correspondant au format "nom_propriete":valeur
+type JsonResponse struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
 // writeJSON émet une réponse contenant un JSON nommé selon "wrap" et contenant les données "data".
 func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, wrap string) error {
 	wrapper := make(map[string]interface{})

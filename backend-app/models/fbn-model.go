@@ -12,7 +12,7 @@ type Agence struct {
 	Agence     string `json:"agence"`
 	Nom        string `json:"nom"`
 	Adresse    string `json:"adresse"`
-	CodePostal string `json:"codePostal"`
+	CodePostal string `json:"code_postal"`
 	Ville      string `json:"ville"`
 	Telephone  string `json:"telephone"`
 	Email      string `json:"email"`
@@ -21,25 +21,27 @@ type Agence struct {
 // Client est le modèle pour les clients
 type Client struct {
 	Client             string  `json:"client"`
-	RaisonSociale      string  `json:"raisonSociale"`
+	RaisonSociale      string  `json:"raison_sociale"`
 	Siren              string  `json:"siren"`
 	Ape                string  `json:"ape"`
 	Adresse            string  `json:"adresse"`
-	CodePostal         string  `json:"codePostal"`
+	CodePostal         string  `json:"code_postal"`
 	Ville              string  `json:"ville"`
 	Pays               string  `json:"pays"`
 	Telephone          string  `json:"telephone"`
 	Email              string  `json:"email"`
-	DistanceKm         float32 `json:"distanceKm"`
-	DeplacementMinutes float32 `json:"deplacementMinutes"`
+	DistanceKm         float32 `json:"distance_km"`
+	DeplacementMinutes float32 `json:"deplacement_minutes"`
 	Agence             string  `json:"agence"`
 	// foreign key (agence) references Agence (agence)
 }
 
 // Concerner sert dans l'association n-aire de Intervention et Matériel
 type Concerner struct {
-	Serie        string `json:"Serie"`
-	Intervention string `json:"Intervention"`
+	NSerie       string `json:"n_serie"`
+	Intervention int    `json:"intervention"`
+	Commentaire  string `json:"commentaire"`
+	TempsPasse   int    `json:"temps_passe"`
 	// foreign key (intervention) references Intervention (intervention)
 	// foreign key (serie) references Materiel (serie)
 }
@@ -70,7 +72,7 @@ type Gerant struct {
 
 // Intervention est le modèle pour les interventions
 type Intervention struct {
-	Intervention string `json:"Intervention"`
+	Intervention int    `json:"intervention"`
 	DateHeure    string `json:"dateHeure"`
 	Etat         string `json:"etat"`
 	Matricule    string `json:"matricule"`
@@ -81,7 +83,7 @@ type Intervention struct {
 
 // Materiel est le modèle pour les matériels
 type Materiel struct {
-	Serie            string  `json:"Serie"`
+	NSerie           string  `json:"n_serie"`
 	DateVente        string  `json:"dateVente"`
 	DateInstallation string  `json:"dateInstallation"`
 	PrixVente        float32 `json:"prixVente"`

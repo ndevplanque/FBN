@@ -4,8 +4,8 @@ import Clients from "./pages/main/Clients";
 import Contracts from "./pages/main/Contracts";
 import Home from "./pages/main/Home/Home";
 import Interventions from "./pages/main/Interventions/Interventions";
-import InterventionsNew from "./pages/main/Interventions/InterventionsNew";
-import InterventionsForm from "./pages/main/Interventions/InterventionsForm";
+import InterventionDetails from "./pages/main/Interventions/InterventionDetails";
+import EditIntervention from "./pages/main/Interventions/EditIntervention";
 import Materials from "./pages/main/Materials";
 import Technicians from "./pages/main/Technicians/Technicians";
 import EditTechnician from "./pages/main/Technicians/EditTechnician";
@@ -41,10 +41,10 @@ const App = () => {
                 <Route path="clients" element={<Clients />} />
                 <Route path="contrats" element={<Contracts />} />
                 <Route path="techniciens" element={<Technicians />} />
-                <Route path={"technicien/:matricule"} element={<EditTechnician />} />
+                <Route path="technicien/:matricule" element={<EditTechnician />} />
                 <Route path="interventions" element={<Interventions role={role} />} />
-                <Route path="interventions/affecter" element={<InterventionsNew />} />
-                <Route path="interventions/completer" element={<InterventionsForm />} />
+                <Route path="intervention/:id" element={<EditIntervention />} />
+                <Route path="intervention/details/:id" element={<InterventionDetails />} />
                 <Route path="materiel" element={<Materials />} />
 
                 {/* pages/secondaries */}
