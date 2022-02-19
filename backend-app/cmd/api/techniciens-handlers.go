@@ -11,12 +11,6 @@ import (
 
 // Les fonctions commençant par H consistent en des Handlers.
 
-// jsonResponse permet de créer des éléments JSON correspondant au format "nom_propriete":valeur
-type jsonResponse struct {
-	OK      bool   `json:"ok"`
-	Message string `json:"message"`
-}
-
 // HGetOneTechnicien est le handler permettant de consulter un technicien en particulier par son matricule.
 // Il est appelé par l'URL "/v1/technicien/get/:matricule".
 func (app *application) HGetOneTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -84,7 +78,7 @@ func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request
 	}
 
 	// retourner une réponse positive
-	err = app.writeJSON(w, http.StatusOK, jsonResponse{OK: true}, "response")
+	err = app.writeJSON(w, http.StatusOK, JsonResponse{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
@@ -166,14 +160,10 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// retourner une réponse positive
-	err = app.writeJSON(w, http.StatusOK, jsonResponse{OK: true}, "response")
+	err = app.writeJSON(w, http.StatusOK, JsonResponse{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
 		return
 	}
-}
-
-func (app *application) HSearchTechniciens(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
 }

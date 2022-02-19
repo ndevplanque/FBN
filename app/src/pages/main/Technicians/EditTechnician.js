@@ -106,7 +106,7 @@ export default class Edit extends Component {
 
     componentDidMount() {
         if (this.state.oldMatricule !== "nouveau") {
-            fetch("http://localhost:4000/v1/technicien/get" + this.state.oldMatricule)
+            fetch("http://localhost:4000/v1/technicien/get/" + this.state.oldMatricule)
                 .then((response) => {
                     if (response.status !== "200") {
                         let err = Error;
