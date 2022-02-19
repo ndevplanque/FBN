@@ -7,24 +7,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
-
-// InterventionPayload est le modèle de données qui n'inclut seulement que les champs du formulaire.
-type InterventionPayload struct {
-	DateHeure string            `json:"date_heure"`
-	Etat      string            `json:"etat"`
-	Matricule string            `json:"matricule"`
-	Client    string            `json:"client"`
-	Materiel  []MaterielPayload `json:"materiel"`
-}
-
-type MaterielPayload struct {
-	NSerie      string `json:"n_serie"`
-	Commentaire string `json:"commentaire"`
-	TempsPasse  int    `json:"temps_passe"`
-}
 
 // Les fonctions commençant par H consistent en des Handlers.
 
@@ -121,7 +107,16 @@ func (app *application) HEditIntervention(w http.ResponseWriter, r *http.Request
 	param := ps.ByName("id")
 
 	// lire le JSON
-	var payload InterventionPayload
+	var payload struct {
+		DateHeure  string `json:"date_heure"`
+		Etat       string `json:"etat"`
+		Technicien string `json:"technicien"`
+		Materiels  []struct {
+			NSerie      string `json:"n_serie"`
+			Commentaire string `json:"commentaire"`
+			TempsPasse  int    `json:"temps_passe"`
+		} `json:"materiels"`
+	}
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		err = errors.New("échec lors du décodage JSON : " + err.Error())
@@ -131,10 +126,20 @@ func (app *application) HEditIntervention(w http.ResponseWriter, r *http.Request
 
 	// assigner les valeurs du JSON à une variable suivant le modèle Intervention
 	var intervention models.Intervention
-	intervention.DateHeure = payload.DateHeure
+	intervention.DateHeure, err = time.Parse("2006-01-02", payload.DateHeure)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
 	intervention.Etat = payload.Etat
-	intervention.Matricule = payload.Matricule
-	intervention.Client = payload.Client
+	intervention.Technicien.Matricule = payload.Technicien
+	for _, materiel := range payload.Materiels {
+		var temp models.Concerner
+		temp.Materiel.NSerie = materiel.NSerie
+		temp.Commentaire = materiel.Commentaire
+		temp.TempsPasse = materiel.TempsPasse
+		intervention.Materiels = append(intervention.Materiels, temp)
+	}
 
 	// choix de la requête SQL à exécuter
 	if param == "nouveau" {
@@ -211,7 +216,13 @@ func (app *application) HCloseIntervention(w http.ResponseWriter, r *http.Reques
 	}
 
 	// lire le JSON
-	var payload []MaterielPayload
+	var payload struct {
+		Materiels []struct {
+			NSerie      string `json:"n_serie"`
+			Commentaire string `json:"commentaire"`
+			TempsPasse  int    `json:"temps_passe"`
+		} `json:"materiels"`
+	}
 	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		err = errors.New("échec lors du décodage JSON : " + err.Error())
@@ -219,21 +230,19 @@ func (app *application) HCloseIntervention(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// remplir un tableau avec les matériels concernés par l'intervention
-	var materiels []*models.Concerner
-	for _, element := range payload {
-		var materiel models.Concerner
-		materiel.NSerie = element.NSerie
-		materiel.Commentaire = element.Commentaire
-		materiel.TempsPasse = element.TempsPasse
-		if err != nil {
-			return
-		}
-		materiels = append(materiels, &materiel)
+	// passer les données du JSON vers une variable suivant le modèle d'une intervention
+	var intervention models.Intervention
+	intervention.ID = id
+	for _, materiel := range payload.Materiels {
+		var temp models.Concerner
+		temp.Materiel.NSerie = materiel.NSerie
+		temp.Commentaire = materiel.Commentaire
+		temp.TempsPasse = materiel.TempsPasse
+		intervention.Materiels = append(intervention.Materiels, temp)
 	}
 
 	// exécuter la requête SQL
-	err = app.models.DB.QCloseIntervention(id, materiels)
+	err = app.models.DB.QCloseIntervention(intervention)
 	if err != nil {
 		err = errors.New("échec de la requête : " + err.Error())
 		app.errorJSON(w, err)

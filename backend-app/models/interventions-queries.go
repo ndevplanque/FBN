@@ -13,41 +13,77 @@ func (fbn *FBNModel) QInterventionById(id int) (*Intervention, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	query := `
-	SELECT intervention, dateHeure, etat, matricule, client
-	FROM intervention
-	WHERE intervention=$1
-	`
-
-	row := fbn.DB.QueryRowContext(ctx, query, id)
-
 	var intervention Intervention
-	err := row.Scan(
-		&intervention.Intervention,
+
+	// démarrer la transactioon
+	tx, err := fbn.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// retrouver la liste du matériel concerné par l'intervention
+	query := `
+	SELECT n_serie, commentaire, temps_passe
+	FROM concerner
+	WHERE id=$1
+	`
+	rows, err := tx.QueryContext(ctx, query, id)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+
+	for rows.Next() {
+		var materiel Concerner
+		err := rows.Scan(
+			&materiel.Materiel.NSerie,
+			&materiel.Commentaire,
+			&materiel.TempsPasse,
+		)
+		if err != nil {
+			return nil, err
+		}
+		intervention.Materiels = append(intervention.Materiels, materiel)
+	}
+
+	query = `
+	SELECT id, date_heure, etat, matricule, id_client
+	FROM intervention
+	WHERE id=$1
+	`
+	row := tx.QueryRowContext(ctx, query, id)
+	if err != nil {
+		_ = tx.Rollback()
+		return nil, err
+	}
+	row.Scan(
+		&intervention.ID,
 		&intervention.DateHeure,
 		&intervention.Etat,
-		&intervention.Matricule,
-		&intervention.Client,
+		&intervention.Technicien.Matricule,
+		&intervention.Client.ID,
 	)
-	if err != nil {
+
+	// valider la transaction
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
 	return &intervention, nil
 }
 
-// QGetIntervention renvoie les interventions d'un technicien ou une erreur
+// QInterventionsByTechnicien renvoie les interventions d'un technicien ou une erreur
 func (fbn *FBNModel) QInterventionsByTechnicien(matricule string) ([]*Intervention, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	query := `
-	SELECT intervention, dateHeure, etat, matricule, client
-	FROM intervention
-	WHERE etat="affectée"
-	AND matricule=$1
-	ORDER BY distance_km ASC
+	SELECT i.id, i.date_heure, i.etat, i.matricule, i.id_client, c.distance_km
+	FROM intervention i, client c
+	WHERE i.matricule=$1
+	AND c.id=i.id_client
+	ORDER BY c.distance_km ASC
 	`
 
 	rows, err := fbn.DB.QueryContext(ctx, query, matricule)
@@ -59,11 +95,12 @@ func (fbn *FBNModel) QInterventionsByTechnicien(matricule string) ([]*Interventi
 	for rows.Next() {
 		var intervention Intervention
 		err := rows.Scan(
-			&intervention.Intervention,
+			&intervention.ID,
 			&intervention.DateHeure,
 			&intervention.Etat,
-			&intervention.Matricule,
-			&intervention.Client,
+			&intervention.Technicien.Matricule,
+			&intervention.Client.ID,
+			&intervention.Client.DistanceKm,
 		)
 		if err != nil {
 			return nil, err
@@ -79,9 +116,9 @@ func (fbn *FBNModel) QAllInterventions() ([]*Intervention, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := `
-	SELECT intervention, date_heure, etat, matricule, client
+	SELECT id, date_heure, etat, matricule, id_client
 	FROM intervention
-	ORDER BY intervention
+	ORDER BY id
 	`
 
 	rows, err := fbn.DB.QueryContext(ctx, query)
@@ -93,11 +130,11 @@ func (fbn *FBNModel) QAllInterventions() ([]*Intervention, error) {
 	for rows.Next() {
 		var intervention Intervention
 		err := rows.Scan(
-			&intervention.Intervention,
+			&intervention.ID,
 			&intervention.DateHeure,
 			&intervention.Etat,
-			&intervention.Matricule,
-			&intervention.Client,
+			&intervention.Technicien.Matricule,
+			&intervention.Client.ID,
 		)
 		if err != nil {
 			return nil, err
@@ -113,20 +150,15 @@ func (fbn *FBNModel) QInsertIntervention(intervention Intervention) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := `
-	INSERT INTO intervention (matricule, sexe, nom, prenom, adresse,
-		code_postal, ville, pays, date_embauche, qualification,
-		date_qualification, email, telephone, agence)
-	VALUES ($1, $2, $3, $4, $5,
-		$6, $7, $8, $9, $10,
-		$11, $12, $13, $14)
+	INSERT INTO intervention (date_heure, etat, matricule, id_client)
+	VALUES ($1, $2, $3, $4)
 	`
 
 	_, err := fbn.DB.ExecContext(ctx, query,
-		&intervention.Intervention,
 		&intervention.DateHeure,
 		&intervention.Etat,
-		&intervention.Matricule,
-		&intervention.Client,
+		&intervention.Technicien.Matricule,
+		&intervention.Client.ID,
 	)
 
 	if err != nil {
@@ -136,23 +168,21 @@ func (fbn *FBNModel) QInsertIntervention(intervention Intervention) error {
 	return nil
 }
 
-// QUpdateIntervention modifie le intervention de matricule "oldMatricule" ou renvoie une erreur
+// QUpdateIntervention modifie une intervention ou renvoie une erreur
 func (fbn *FBNModel) QUpdateIntervention(id int, intervention Intervention) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := `
 	UPDATE intervention
-	SET matricule = $1, sexe = $2, nom = $3, prenom = $4, adresse = $5,
-		code_postal = $6, ville = $7, pays = $8, date_embauche = $9, qualification = $10,
-		date_qualification = $11, email = $12, telephone = $13, agence = $14
+	SET date_heure, etat, matricule, id_client
 	WHERE matricule = $15
 	`
 
 	_, err := fbn.DB.ExecContext(ctx, query,
 		&intervention.DateHeure,
 		&intervention.Etat,
-		&intervention.Matricule,
-		&intervention.Client,
+		&intervention.Technicien.Matricule,
+		&intervention.Client.ID,
 	)
 
 	if err != nil {
@@ -170,8 +200,8 @@ func (fbn *FBNModel) QAffectIntervention(id int, matricule string) error {
 
 	query := `
 	UPDATE intervention
-	SET etat="affectée", matricule=(SELECT matricule FROM technicien WHERE matricule=$2)
-	WHERE intervention=$1
+	SET matricule=(SELECT matricule FROM technicien WHERE matricule=$2)
+	WHERE id=$1
 	`
 
 	_, err := fbn.DB.ExecContext(ctx, query, id, matricule)
@@ -183,7 +213,7 @@ func (fbn *FBNModel) QAffectIntervention(id int, matricule string) error {
 }
 
 // QCloseIntervention clôture une intervention ou renvoie une erreur
-func (fbn *FBNModel) QCloseIntervention(id int, materiels []*Concerner) error {
+func (fbn *FBNModel) QCloseIntervention(intervention Intervention) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -198,14 +228,14 @@ func (fbn *FBNModel) QCloseIntervention(id int, materiels []*Concerner) error {
 	query := `
 	UPDATE concerner
 	SET commentaire=$1, temps_passe=$2
-	WHERE intervention=$3 AND n_serie=$4
+	WHERE id_intervention=$3 AND n_serie=$4
 	`
-	for _, materiel := range materiels {
+	for _, materiel := range intervention.Materiels {
 		_, err = tx.ExecContext(ctx, query,
-			&materiel.Commentaire,
-			&materiel.TempsPasse,
-			id,
-			&materiel.NSerie)
+			materiel.Commentaire,
+			materiel.TempsPasse,
+			intervention.ID,
+			materiel.Materiel.NSerie)
 		if err != nil {
 			_ = tx.Rollback()
 			return err
@@ -216,9 +246,9 @@ func (fbn *FBNModel) QCloseIntervention(id int, materiels []*Concerner) error {
 	query = `
 	UPDATE intervention
 	SET etat="clôturée"
-	WHERE intervention=$1
+	WHERE id=$1
 	`
-	_, err = tx.ExecContext(ctx, query, id)
+	_, err = tx.ExecContext(ctx, query, intervention.ID)
 	if err != nil {
 		_ = tx.Rollback()
 		return err

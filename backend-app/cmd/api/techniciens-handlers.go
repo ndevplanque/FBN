@@ -5,11 +5,32 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 )
 
 // Les fonctions commençant par H consistent en des Handlers.
+
+// TechnicienPayload est le modèle de données qui n'inclut seulement que les champs du formulaire.
+// Si on décidait d'enlever le matricule et l'email du formulaire, il faudrait les enlever de TechnicienPayload.
+// Ils seraient ensuite calculées dans le handler et passés séparement à la variable de modèle Technicien.
+type TechnicienPayload struct {
+	Matricule         string `json:"matricule"`
+	Sexe              string `json:"sexe"` // https://golangbyexample.com/character-in-go/
+	Nom               string `json:"nom"`
+	Prenom            string `json:"prenom"`
+	Adresse           string `json:"adresse"`
+	CodePostal        string `json:"codePostal"`
+	Ville             string `json:"ville"`
+	Pays              string `json:"pays"`
+	DateEmbauche      string `json:"dateEmbauche"`
+	Qualification     string `json:"qualification"`
+	DateQualification string `json:"dateQualification"`
+	Email             string `json:"email"`
+	Telephone         string `json:"telephone"`
+	Agence            string `json:"agence"`
+}
 
 // HGetOneTechnicien est le handler permettant de consulter un technicien en particulier par son matricule.
 // Il est appelé par l'URL "/v1/technicien/get/:matricule".
@@ -86,27 +107,6 @@ func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// TechnicienPayload est le modèle de données qui n'inclut seulement que les champs du formulaire.
-// Si on décidait d'enlever le matricule et l'email du formulaire, il faudrait les enlever de TechnicienPayload.
-// Ils seraient ensuite calculées dans le handler et passés séparement à la variable de modèle Technicien.
-type TechnicienPayload struct {
-	Matricule         string `json:"matricule"`
-	Sexe              string `json:"sexe"` // https://golangbyexample.com/character-in-go/
-	Nom               string `json:"nom"`
-	Prenom            string `json:"prenom"`
-	Adresse           string `json:"adresse"`
-	CodePostal        string `json:"codePostal"`
-	Ville             string `json:"ville"`
-	Pays              string `json:"pays"`
-	DateEmbauche      string `json:"dateEmbauche"`
-	Qualification     string `json:"qualification"`
-	DateQualification string `json:"dateQualification"`
-	Email             string `json:"email"`
-	Telephone         string `json:"telephone"`
-	Agence            string `json:"agence"`
-	// foreign key (agence) references Agence (agence)
-}
-
 // HEditTechnicien est le handler pour la création et la modification des techniciens dans la BDD.
 // Il est appelé par l'URL "/v1/technicien/edit/:oldMatricule".
 // Si :oldMatricule vaut "nouveau", on crée un nouveau technicien.
@@ -119,7 +119,22 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 	oldMatricule := ps.ByName("oldMatricule")
 
 	// lire le JSON
-	var payload TechnicienPayload
+	var payload struct {
+		Matricule         string `json:"matricule"`
+		Sexe              string `json:"sexe"`
+		Nom               string `json:"nom"`
+		Prenom            string `json:"prenom"`
+		Adresse           string `json:"adresse"`
+		CodePostal        string `json:"codePostal"`
+		Ville             string `json:"ville"`
+		Pays              string `json:"pays"`
+		DateEmbauche      string `json:"dateEmbauche"`
+		Qualification     string `json:"qualification"`
+		DateQualification string `json:"dateQualification"`
+		Email             string `json:"email"`
+		Telephone         string `json:"telephone"`
+		Agence            string `json:"agence"`
+	}
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		err = errors.New("échec lors du décodage du JSON pour l'édition d'un technicien : " + err.Error())
@@ -137,12 +152,20 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 	technicien.CodePostal = payload.CodePostal
 	technicien.Ville = payload.Ville
 	technicien.Pays = payload.Pays
-	technicien.DateEmbauche = payload.DateEmbauche
+	technicien.DateEmbauche, err = time.Parse("2006-01-02", payload.DateEmbauche)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
 	technicien.Qualification = payload.Qualification
-	technicien.DateQualification = payload.DateQualification
+	technicien.DateQualification, err = time.Parse("2006-01-02", payload.DateQualification)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
 	technicien.Email = payload.Email
 	technicien.Telephone = payload.Telephone
-	technicien.Agence = payload.Agence
+	technicien.Agence.Code = payload.Agence
 
 	// choix de la requête SQL à exécuter
 	if oldMatricule == "nouveau" {

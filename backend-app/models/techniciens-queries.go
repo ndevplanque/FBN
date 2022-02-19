@@ -17,7 +17,7 @@ func (m *FBNModel) QTechnicienById(matricule string) (*Technicien, error) {
 	SELECT matricule, sexe, nom, prenom, adresse,
 		code_postal, ville, pays, date_embauche,
 		qualification, date_qualification, email,
-		telephone, agence
+		telephone, code_agence
 	FROM technicien
 	WHERE matricule=$1
 	`
@@ -41,7 +41,7 @@ func (m *FBNModel) QTechnicienById(matricule string) (*Technicien, error) {
 		&technicien.DateQualification,
 		&technicien.Email,
 		&technicien.Telephone,
-		&technicien.Agence,
+		&technicien.Agence.Code,
 	)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (m *FBNModel) QAllTechniciens() ([]*Technicien, error) {
 	SELECT matricule, sexe, nom, prenom, adresse,
 		code_postal, ville, pays, date_embauche,
 		qualification, date_qualification, email,
-		telephone, agence
+		telephone, code_agence
 	FROM technicien
 	ORDER BY matricule
 	`
@@ -85,7 +85,7 @@ func (m *FBNModel) QAllTechniciens() ([]*Technicien, error) {
 			&technicien.DateQualification,
 			&technicien.Email,
 			&technicien.Telephone,
-			&technicien.Agence,
+			&technicien.Agence.Code,
 		)
 		if err != nil {
 			return nil, err
@@ -103,7 +103,7 @@ func (m *FBNModel) QInsertTechnicien(technicien Technicien) error {
 	query := `
 	INSERT INTO technicien (matricule, sexe, nom, prenom, adresse,
 		code_postal, ville, pays, date_embauche, qualification,
-		date_qualification, email, telephone, agence)
+		date_qualification, email, telephone, code_agence)
 	VALUES ($1, $2, $3, $4, $5,
 		$6, $7, $8, $9, $10,
 		$11, $12, $13, $14)
@@ -123,7 +123,7 @@ func (m *FBNModel) QInsertTechnicien(technicien Technicien) error {
 		technicien.DateQualification,
 		technicien.Email,
 		technicien.Telephone,
-		technicien.Agence,
+		technicien.Agence.Code,
 	)
 
 	if err != nil {
@@ -141,7 +141,7 @@ func (m *FBNModel) QUpdateTechnicien(oldMatricule string, technicien Technicien)
 	UPDATE technicien
 	SET matricule = $1, sexe = $2, nom = $3, prenom = $4, adresse = $5,
 		code_postal = $6, ville = $7, pays = $8, date_embauche = $9, qualification = $10,
-		date_qualification = $11, email = $12, telephone = $13, agence = $14
+		date_qualification = $11, email = $12, telephone = $13, code_agence = $14
 	WHERE matricule = $15
 	`
 
@@ -159,7 +159,7 @@ func (m *FBNModel) QUpdateTechnicien(oldMatricule string, technicien Technicien)
 		technicien.DateQualification,
 		technicien.Email,
 		technicien.Telephone,
-		technicien.Agence,
+		technicien.Agence.Code,
 		oldMatricule,
 	)
 
