@@ -58,7 +58,7 @@ export default function Interventions(props) {
                                     <TableCell component="th" scope="row">{intervention.intervention}</TableCell>
                                     <TableCell align="left">{intervention.client}</TableCell>
                                     <TableCell align="left">{intervention.matricule}</TableCell>
-                                    <TableCell align="left">{intervention.dateHeure}</TableCell>
+                                    <TableCell align="left">{intervention.date_heure}</TableCell>
                                     <TableCell align="left">{intervention.etat}</TableCell>
                                     <TableCell align="left">
                                         <IconButton aria-label="edit" href={"/intervention/" + intervention.intervention} >

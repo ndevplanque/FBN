@@ -27,7 +27,7 @@ export default function Technicians() {
             .then(json => setTechniciens(json.techniciens))
     }, [])
 
-    if (error) { return <div>Erreur {error.message}</div> }
+    if (error) { return <div>Erreur {error}</div> }
     else {
         return (
             <>
