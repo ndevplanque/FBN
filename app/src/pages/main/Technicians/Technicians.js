@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { useEffect } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -12,118 +12,73 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIconWithConfirm from '../../../components/DeleteIconWithConfirm';
 
 
-export default class Technicians extends Component {
+export default function Technicians() {
+    const [techniciens, setTechniciens] = React.useState([]);
+    const [error, setError] = React.useState(null);
 
-    state = {
-        techniciens: [],
-        isLoaded: false,
-    };
-
-
-    componentDidMount() {
+    useEffect(() => {
         fetch("http://localhost:4000/v1/techniciens")
             .then((response) => {
                 console.log("Code de status:", response.status)
-                if (response.status !== 200) {
-                    let err = Error;
-                    Error.message = response.status;
-                    this.setState({ error: err });
-                }
+                if (response.status !== 200) { setError(response.status); }
+                else { setError(null); }
                 return response.json();
             })
-            .then((json) => {
-                this.setState({
-                    techniciens: json.techniciens,
-                    isLoaded: true,
-                    error: null,
-                },
-                    (error) => {
-                        this.setState({
-                            isLoaded: true,
-                            error
-                        })
-                    }
-                )
-            })
-    }
+            .then(json => setTechniciens(json.techniciens))
+    }, [])
 
-    render() {
-        const { techniciens, isLoaded, error } = this.state;
-        if (error) {
-            return <div>Erreur {error.message}</div>
-        }
-        else if (!isLoaded) { return <p>Chargement...</p> }
-        else {
-            return (
-                <Fragment>
-                    <h1>Techniciens</h1>
-                    <br />
-                    <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
-                        <Button href="technicien/nouveau" variant="contained" color="primary">Ajouter</Button>
-                    </Stack>
-                    <br />
-                    <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell align="left">Matricule</TableCell>
-                                    {/* <TableCell align="left">Sexe</TableCell> */}
-                                    <TableCell align="left">Nom</TableCell>
-                                    <TableCell align="left">Prenom</TableCell>
-                                    {/* <TableCell align="left">Adresse</TableCell> */}
-                                    {/* <TableCell align="left">Code Postal</TableCell> */}
-                                    {/* <TableCell align="left">Ville</TableCell> */}
-                                    {/* <TableCell align="left">Pays</TableCell> */}
-                                    {/* <TableCell align="left">Date Embauche</TableCell> */}
-                                    {/* <TableCell align="left">Qualification</TableCell> */}
-                                    {/* <TableCell align="left">Date Qualification</TableCell> */}
-                                    <TableCell align="left">Email</TableCell>
-                                    <TableCell align="left">Telephone</TableCell>
-                                    <TableCell align="left">Agence</TableCell>
-                                    <TableCell align="left"></TableCell>
+    if (error) { return <div>Erreur {error.message}</div> }
+    else {
+        return (
+            <>
+                <h1>Techniciens</h1>
+                <br />
+                <Stack direction="row" justifyContent="flex-end" alignItems="center" spacing={2}>
+                    <Button href="technicien/nouveau" variant="contained" color="primary">Ajouter</Button>
+                </Stack>
+                <br />
+                <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell align="left">Matricule</TableCell>
+                                <TableCell align="left">Nom</TableCell>
+                                <TableCell align="left">Prenom</TableCell>
+                                <TableCell align="left">Email</TableCell>
+                                <TableCell align="left">Telephone</TableCell>
+                                <TableCell align="left">Agence</TableCell>
+                                <TableCell align="left"></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {techniciens.map((technicien) => (
+                                <TableRow key={technicien.matricule}
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                    <TableCell component="th" scope="row">{technicien.matricule}</TableCell>
+                                    <TableCell align="left">{technicien.nom}</TableCell>
+                                    <TableCell align="left">{technicien.prenom}</TableCell>
+                                    <TableCell align="left">{technicien.email}</TableCell>
+                                    <TableCell align="left">{technicien.telephone}</TableCell>
+                                    <TableCell align="left">{technicien.agence}</TableCell>
+                                    <TableCell align="left">
+                                        <IconButton aria-label="edit" href={"/technicien/" + technicien.matricule} >
+                                            <EditIcon />
+                                        </IconButton>
+                                        <DeleteIconWithConfirm
+                                            titre={`Supprimer ${technicien.prenom} ${technicien.nom} (${technicien.matricule}) ?`}
+                                            message="Êtes-vous sûr ?"
+                                            deleteUrl={`http://localhost:4000/v1/technicien/delete/${technicien.matricule}`}
+                                            onDelete={() => {
+                                                setTechniciens(techniciens.filter(item => item.matricule !== technicien.matricule))
+                                            }}
+                                        />
+                                    </TableCell>
                                 </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {techniciens.map((technicien) => (
-                                    // technicien.dateEmbauche = technicien.dateEmbauche.split("T")[0],
-                                    // technicien.dateQualification = technicien.dateQualification.split("T")[0],
-                                    <TableRow key={technicien.matricule}
-                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                        <TableCell component="th" scope="row">{technicien.matricule}</TableCell>
-                                        {/* <TableCell align="left">{technicien.sexe}</TableCell> */}
-                                        <TableCell align="left">{technicien.nom}</TableCell>
-                                        <TableCell align="left">{technicien.prenom}</TableCell>
-                                        {/* <TableCell align="left">{technicien.adresse}</TableCell> */}
-                                        {/* <TableCell align="left">{technicien.codePostal}</TableCell> */}
-                                        {/* <TableCell align="left">{technicien.ville}</TableCell> */}
-                                        {/* <TableCell align="left">{technicien.pays}</TableCell> */}
-                                        {/* <TableCell align="left">{technicien.dateEmbauche}</TableCell> */}
-                                        {/* <TableCell align="left">{technicien.qualification}</TableCell> */}
-                                        {/* <TableCell align="left">{technicien.dateQualification}</TableCell> */}
-                                        <TableCell align="left">{technicien.email}</TableCell>
-                                        <TableCell align="left">{technicien.telephone}</TableCell>
-                                        <TableCell align="left">{technicien.agence}</TableCell>
-                                        <TableCell align="left">
-                                            <IconButton aria-label="edit" href={"/technicien/" + technicien.matricule} >
-                                                <EditIcon />
-                                            </IconButton>
-                                            <DeleteIconWithConfirm
-                                                titre={`Supprimer ${technicien.prenom} ${technicien.nom} (${technicien.matricule}) ?`}
-                                                message="Êtes-vous sûr ?"
-                                                deleteUrl={`http://localhost:4000/v1/technicien/delete/${technicien.matricule}`}
-                                                onDelete={() => { 
-                                                    this.setState({techniciens:techniciens.filter(item => item !== technicien)})
-                                                }}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-
-                </Fragment >
-            )
-        }
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </>
+        )
     }
 }
