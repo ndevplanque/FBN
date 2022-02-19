@@ -33,18 +33,15 @@ export default function AlertDialogSlide(props) {
     const handleDialogClose = () => { setDialogOpen(false); };
     const handleDialogConfirmed = () => {
         setDialogOpen(false);
-        fetch(props.deleteUrl, {method:"GET"})
-            .then(response => response.json)
-            .then(data => {
-                if (data.error) {
+        fetch(props.deleteUrl, { method: "GET" })
+            .then(response => {
+                if (response.ok) {
+                    props.onDelete();
+                } else {
                     setSeverity("error");
                     setMessage("Echec");
-                } else {
-                    setSeverity("success");
-                    setMessage("Supprimé");
-                    props.onDelete();
+                    setSnackbarOpen(true);
                 }
-                setSnackbarOpen(true);
             })
     };
 
