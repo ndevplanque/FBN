@@ -1,5 +1,7 @@
-import React, { useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import React, { useEffect } from 'react'
+import { useParams } from "react-router-dom";
+import TextField from '@mui/material/TextField';
+import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -7,214 +9,242 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Stack } from "@mui/material";
-import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import TextFieldWithCheckButton from '../../../components/TextFieldWithCheckButton';
+import SubmitButtonWithAlert from '../../../components/SubmitButtonWithAlert';
+import { jsonToLocaleDate, timeOptions } from '../../../functions/dateFunc';
 
 
-export default function EditIntervention() {
+const options = timeOptions(8, 17, 4);
+
+export default function EditIntervention(props) {
 
     const [intervention, setIntervention] = React.useState([]);
-    const [error, setError] = React.useState(null);
     const [isLoaded, setIsLoaded] = React.useState(false);
+
+    const [error, setError] = React.useState(null);
+    const [errors, setErrors] = React.useState([]);
+
+    const [materiels, setMateriels] = React.useState([]);
+    const [materielLoaded, setMaterielLoaded] = React.useState(true);
+    const [clientAlert, setClientAlert] = React.useState({ severity: "" });
+
+    const [alert, setAlert] = React.useState({ severity: "" });
     const { id } = useParams();
+
 
     useEffect(() => {
         if (id !== "nouveau") {
-            fetch("http://localhost:4000/v1/intervention/get/" + id)
-                .then((response) => {
-                    console.log("Code de status:", response.status);
-                    if (response.status !== 200) { setError(response.status); }
-                    else { setError(null); }
-                    return response.json();
-                })
-                .then(json => {
-                    setIntervention(json.intervention);
-                    setIsLoaded(true);
-                });
+            // fetch("http://localhost:4000/v1/intervention/get/" + id)
+            //     .then((response) => {
+            //         if (response.status !== 200) { setError(response.status) };
+            //         if (response.status === 400) { setError(response.status + ", matricule introuvable") };
+            //         return response.json();
+            //     })
+            //     .then(json => {
+            //         json.technicien.date_embauche = jsonToInputDate(json.technicien.date_embauche);
+            //         json.technicien.date_qualification = jsonToInputDate(json.technicien.date_qualification);
+            //         setTechnicien(json.technicien);
+            //         setIsLoaded(true)
+            //     });
         } else {
             setIsLoaded(true);
+            setIntervention({ date: "", heure: "08:00:00", id_client: "", etat: 1 });
         }
-    }, [id]);
 
-    handleChange(() => { })
-    handleSubmit(() => { })
+    }, [id, options])
 
-    if (error) { return <div>Erreur {error}</div> }
-    else if (!isLoaded) { return <p>Chargement...</p> }
+    function getMateriels(value) {
+        setMaterielLoaded(false);
+        fetch("http://localhost:4000/v1/materiels/" + value)
+            .then((response) => {
+                if (response.status !== 200) {
+                    setClientAlert({
+                        severity: "error",
+                        message: "Client introuvable"
+                    });
+                    setMaterielLoaded(true);
+                };
+                return response.json();
+            })
+            .then(json => {
+                if (json.materiels) {
+                    json.materiels.map((_, index) => {
+                        json.materiels[index].date_vente = jsonToLocaleDate(json.materiels[index].date_vente);
+                        json.materiels[index].date_installation = jsonToLocaleDate(json.materiels[index].date_installation);
+                    });
+                    setMateriels(json.materiels);
+                    setClientAlert({
+                        severity: ""
+                    })
+                } else {
+                    setMateriels([]);
+                    setClientAlert({
+                        severity: "error",
+                        message: "Aucun matériel pour ce client"
+                    })
+                }
+                setMaterielLoaded(true);
+            })
+
+    }
+
+    const handleSubmit = (evt) => {
+        evt.preventDefault();
+
+        let errors = [];
+        // if (technicien.matricule === "") { errors.push("matricule"); }
+        setErrors(errors);
+        if (errors.length > 0) { return false; }
+
+        // const data = new FormData(evt.target);
+        // const payload = Object.fromEntries(data.entries());
+        const requestOptions = {
+            method: 'POST',
+            body: JSON.stringify(intervention),
+        }
+        fetch("http://localhost:4000/v1/intervention/edit/" + id, requestOptions)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    setAlert({
+                        severity: "error",
+                        message: "Erreur dans le formulaire"
+                    })
+                } else {
+                    setAlert({
+                        severity: "success",
+                        message: "Envoyé avec succès"
+                    })
+                }
+            })
+    };
+
+    const handleChange = () => (evt) => {
+        let value = evt.target.value;
+        let name = evt.target.name;
+        setIntervention({ ...intervention, [name]: value, });
+    }
+
+    function toggleCheckbox(checkboxId) {
+        let input = document.getElementById(checkboxId);
+        input.checked = !input.checked;
+    }
+    function hasError(key) {
+        return errors.indexOf(key) !== -1;
+    }
+
+    if (error) {
+        return <div>Erreur {error}</div>;
+    } else if (!isLoaded) {
+        return <p>Chargement...</p>
+    }
     else {
-        return (
-            <>
-                {id === "nouveau" ? <h1>Nouvelle intervention</h1> : <h1>Modifier l'intervention</h1>}
-                <Stack noValidate direction="column" justifyContent="center" alignItems="flex-start" spacing={2} component="form" onSubmit={this.handleSubmit} autoComplete="off">
-                    <hr />
+        return (<>
+
+            {// Afficher le titre qui convient
+                id === "nouveau"
+                    ? <h1>Nouvelle intervention</h1>
+                    : <h1>Modifier l'intervention</h1>}
+            <Stack direction="column" justifyContent="center" alignItems="flex-start" spacing={2} component="form" onSubmit={handleSubmit} >
+                <hr />
+                {// Afficher champ client si c'est une nouvelle intervention
+                    id === "nouveau"
+                        ? <>
+                            <TextFieldWithCheckButton
+                                type="text"
+                                name="id_client" id="id-client" label="Client"
+                                value={intervention.id_client}
+                                onChange={() => handleChange()}
+                                searchFunction={() => getMateriels(intervention.id_client)}
+                                severity={clientAlert.severity}
+                                message={clientAlert.message}
+                            />
+                        </>
+                        : <></>}
+
+                <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
                     <TextField
                         type="date"
-                        name="date_heure"
-                        id="date_heure"
-                        label="DateHeure"
-                        value={intervention.date_heure}
-                        onChange={handleChange()}
-                    />
-
-                    {/* voir comment on fait un select */}
-                    <TextField
-                        type="text"
-                        name="technicien"
-                        id="technicien"
-                        label="Technicien"
-                        value={technicien.technicien}
-                        onChange={handleChange()}
-                    />
-
-                    {/* Materiels  []struct {
-			NSerie      string `json:"n_serie"`
-			Commentaire string `json:"commentaire"`
-			TempsPasse  int    `json:"temps_passe"`
-		} `json:"materiels"` */}
-
-
-                    <TextField
-                        type="text"
-                        name="nom"
-                        id="nom"
-                        label="Nom"
-                        value={technicien.nom}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="text"
-                        name="prenom"
-                        id="prenom"
-                        label="Prenom"
-                        value={technicien.prenom}
-                        onChange={handleChange()}
-                    />
-
-
-                    <Typography>Adresse</Typography>
-                    <TextField
-                        type="text"
-                        name="adresse"
-                        id="adresse"
-                        label="Adresse"
-                        value={technicien.adresse}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="text"
-                        name="codePostal"
-                        id="codePostal"
-                        label="Code Postal"
-                        value={technicien.codePostal}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="text"
-                        name="ville"
-                        id="ville"
-                        label="Ville"
-                        value={technicien.ville}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="text"
-                        name="pays"
-                        id="pays"
-                        label="Pays"
-                        value={technicien.pays}
-                        onChange={handleChange()}
-                    />
-
-
-                    <Typography>Parcours</Typography>
-                    <TextField
-                        type="date"
-                        name="dateEmbauche"
-                        id="dateEmbauche"
-                        label="Date Embauche"
-                        value={technicien.dateEmbauche}
+                        name="date" id="date" label="Date"
+                        value={intervention.date}
                         InputLabelProps={{ shrink: true, }}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="text"
-                        name="qualification"
-                        id="qualification"
-                        label="Qualification"
-                        value={technicien.qualification}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="date"
-                        name="dateQualification"
-                        id="dateQualification"
-                        label="Date Qualification"
-                        value={technicien.dateQualification}
-                        InputLabelProps={{ shrink: true, }}
-                        onChange={handleChange()}
-                    />
+                        onChange={handleChange()} />
 
-
-                    <Typography>Contacts</Typography>
                     <TextField
-                        type="email"
-                        name="email"
-                        id="email"
-                        label="Email"
-                        value={technicien.email}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="text"
-                        name="telephone"
-                        id="telephone"
-                        label="Telephone"
-                        value={technicien.telephone}
-                        onChange={handleChange()}
-                    />
-                    <TextField
-                        type="agence"
-                        name="agence"
-                        id="agence"
-                        label="Agence"
-                        value={technicien.agence}
-                        onChange={handleChange()}
-                    />
-
-
-                    <hr />
-                    <SubmitButtonWithAlert
-                        btnVariant="contained"
-                        btnColor="primary"
-                        btnText="Enregistrer"
-                        severity={this.state.alert.severity}
-                        message={this.state.alert.message}
-                    />
-
+                        select
+                        name="heure" id="heure" label="Heure"
+                        value={intervention.heure}
+                        onChange={handleChange()}>
+                        {options.map((option) => (<MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>))}
+                    </TextField>
                 </Stack>
-                <h2>Matériels concernés</h2>
+
+
+                {// Ne pas afficher les champs etat et technicien si c'est une nouvelle intervention
+                    id === "nouveau"
+                        ? <></>
+                        : <>
+                            <TextField
+                                type="text"
+                                name="etat" id="etat" label="Etat"
+                                value={intervention.etat}
+                                onChange={handleChange()} />
+                            <TextField
+                                type="text"
+                                name="technicien" id="technicien" label="Technicien"
+                                value={intervention.matricule}
+                                onChange={handleChange()} />
+                        </>
+                }
+
+
+
                 <TableContainer component={Paper}>
                     <Table sx={{ minWidth: 650 }} aria-label="simple table">
                         <TableHead>
                             <TableRow>
+                                <TableCell align="left"></TableCell>
                                 <TableCell align="left">Numéro de série</TableCell>
-                                <TableCell align="left">Commentaire</TableCell>
-                                <TableCell align="left">Temps passé</TableCell>
+                                <TableCell align="left">Emplacement</TableCell>
+                                <TableCell align="left">Prix de vente</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {intervention.materiel.map((materiel) => (
+                            {materiels.map((materiel) => (
                                 <TableRow key={materiel.n_serie}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: "pointer" }}
+                                    onClick={() => { toggleCheckbox("cb" + materiel.n_serie) }} >
+                                    <TableCell scope="row">
+                                        <input type="checkbox"
+                                            name={materiel.n_serie} id={"cb" + materiel.n_serie}
+                                            onChange={handleChange()} />
+                                    </TableCell>
                                     <TableCell component="th" scope="row">{materiel.n_serie}</TableCell>
-                                    <TableCell align="left">{materiel.commentaire}</TableCell>
-                                    <TableCell align="left">{materiel.temps_passe}</TableCell>
+                                    <TableCell align="left">{materiel.emplacement}</TableCell>
+                                    <TableCell align="left">{materiel.prix_vente}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </TableContainer>
-            </>
-        )
+
+
+
+                <hr />
+                <SubmitButtonWithAlert
+                    btnVariant="contained"
+                    btnColor="primary"
+                    btnText="Enregistrer"
+                    severity={alert.severity}
+                    message={alert.message}
+                />
+
+            </Stack>
+        </>)
     }
 }
