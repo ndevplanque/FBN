@@ -216,13 +216,14 @@ export default function EditIntervention(props) {
                         </TableHead>
                         <TableBody>
                             {materiels.map((materiel) => (
-                                <TableRow key={materiel.n_serie}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: "pointer" }}
+                                <TableRow className="clickable-row" key={materiel.n_serie}
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     onClick={() => { toggleCheckbox("cb" + materiel.n_serie) }} >
                                     <TableCell scope="row">
                                         <input type="checkbox"
                                             name={materiel.n_serie} id={"cb" + materiel.n_serie}
-                                            onChange={handleChange()} />
+                                            onChange={handleChange()}
+                                            onClick={() => { toggleCheckbox("cb" + materiel.n_serie) }} />
                                     </TableCell>
                                     <TableCell component="th" scope="row">{materiel.n_serie}</TableCell>
                                     <TableCell align="left">{materiel.emplacement}</TableCell>

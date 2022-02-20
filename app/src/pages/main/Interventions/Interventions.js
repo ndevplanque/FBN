@@ -37,7 +37,7 @@ export default function Interventions(props) {
                 </Stack>
                 <br />
                 <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                    <Table aria-label="simple table">
                         <TableHead>
                             <TableRow>
                                 <TableCell align="left">Numéro</TableCell>
@@ -50,8 +50,8 @@ export default function Interventions(props) {
                         </TableHead>
                         <TableBody>
                             {interventions.map((intervention) => (
-                                <TableRow key={intervention.id}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor:"pointer" }}
+                                <TableRow className="clickable-row" key={intervention.id}
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     onClick={() => { document.location = "/intervention/details/" + intervention.id }}
                                 >
                                     <TableCell component="th" scope="row">{intervention.id}</TableCell>

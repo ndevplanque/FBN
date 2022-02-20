@@ -52,8 +52,8 @@ export default function Technicians() {
                         </TableHead>
                         <TableBody>
                             {techniciens.map((technicien) => (
-                                <TableRow key={technicien.matricule}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: "pointer" }}
+                                <TableRow className="clickable-row" key={technicien.matricule}
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     onClick={() => { document.location = "/technicien/details/" + technicien.matricule }}>
                                     <TableCell component="th" scope="row">{technicien.matricule}</TableCell>
                                     <TableCell align="left">{technicien.nom}</TableCell>
