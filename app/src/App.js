@@ -8,6 +8,7 @@ import InterventionDetails from "./pages/main/Interventions/InterventionDetails"
 import EditIntervention from "./pages/main/Interventions/EditIntervention";
 import Materials from "./pages/main/Materials";
 import Technicians from "./pages/main/Technicians/Technicians";
+import TechnicianDetails from "./pages/main/Technicians/TechnicianDetails";
 import EditTechnician from "./pages/main/Technicians/EditTechnician";
 
 import Agency from "./pages/secondaries/Agency";
@@ -42,6 +43,7 @@ const App = () => {
                 <Route path="contrats" element={<Contracts />} />
                 <Route path="techniciens" element={<Technicians />} />
                 <Route path="technicien/:matricule" element={<EditTechnician />} />
+                <Route path="technicien/details/:matricule" element={<TechnicianDetails />} />
                 <Route path="interventions" element={<Interventions role={role} />} />
                 <Route path="intervention/:id" element={<EditIntervention />} />
                 <Route path="intervention/details/:id" element={<InterventionDetails />} />

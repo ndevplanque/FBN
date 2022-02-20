@@ -40,7 +40,7 @@ func (app *application) routes() http.Handler {
 	router.GET("/v1/intervention/get/:id", app.HGetOneIntervention)
 
 	// Les interventions d'un technicien
-	router.GET("/v1/interventions/:matricule", app.HGetInterventions)
+	router.GET("/v1/interventions/:matricule", app.HGetInterventionsByTechnicien)
 
 	// Toutes les interventions
 	router.GET("/v1/interventions", app.HGetAllInterventions)
@@ -53,6 +53,10 @@ func (app *application) routes() http.Handler {
 
 	// Clôturer une intervention
 	router.POST("/v1/intervention/close/:id", app.HCloseIntervention)
+
+	// ----- MATERIELS -----
+	// Les matériels d'un client
+	router.GET("/v1/materiels/:id_client", app.HGetMaterielsByClient)
 
 	// ----- FIN -----
 	// appliquer les politiques CORS
