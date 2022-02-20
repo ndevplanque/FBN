@@ -6,7 +6,7 @@ import (
 )
 
 // jsonResponse permet de créer des éléments JSON correspondant au format "nom_propriete":valeur
-type JsonResponse struct {
+type JsonConfirm struct {
 	OK      bool   `json:"ok"`
 	Message string `json:"message"`
 }
