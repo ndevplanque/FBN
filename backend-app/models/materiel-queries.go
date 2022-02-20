@@ -7,17 +7,17 @@ import (
 
 // Les fonctions commençant par Q consistent en des requêtes SQL.
 
-// QInterventionsByTechnicien renvoie les interventions d'un technicien ou une erreur
+// QInterventionsByTechnicien renvoie les matériels d'un client ou une erreur
 func (fbn *FBNModel) QMaterielsByClient(client int) ([]*Materiel, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	query := `
-	SELECT n_serie, dateVente, dateInstallation, prixVente, emplacement, reference, contrat
-	FROM materiel, contrat
-	WHERE materiel.contrat=contrat.contrat
-	AND contrat.client=$1
+	SELECT m.n_serie, m.date_vente, m.date_installation, m.prix_vente, m.emplacement, m.reference, m.id_contrat
+	FROM materiel m, contrat c
+	WHERE m.id_contrat=c.id 
+	AND c.id_client=$1
 	`
 
 	rows, err := fbn.DB.QueryContext(ctx, query, client)

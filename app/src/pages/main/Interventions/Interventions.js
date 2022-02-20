@@ -10,7 +10,6 @@ import Paper from '@mui/material/Paper';
 import { Stack, Button } from "@mui/material";
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteIconWithConfirm from '../../../components/DeleteIconWithConfirm';
 
 
 export default function Interventions(props) {
@@ -51,17 +50,17 @@ export default function Interventions(props) {
                         </TableHead>
                         <TableBody>
                             {interventions.map((intervention) => (
-                                <TableRow key={intervention.intervention}
+                                <TableRow key={intervention.id}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor:"pointer" }}
-                                    onClick={() => { document.location = "/intervention/details/" + intervention.intervention }}
+                                    onClick={() => { document.location = "/intervention/details/" + intervention.id }}
                                 >
-                                    <TableCell component="th" scope="row">{intervention.intervention}</TableCell>
-                                    <TableCell align="left">{intervention.client}</TableCell>
+                                    <TableCell component="th" scope="row">{intervention.id}</TableCell>
+                                    <TableCell align="left">{intervention.id_client}</TableCell>
                                     <TableCell align="left">{intervention.matricule}</TableCell>
                                     <TableCell align="left">{intervention.date_heure}</TableCell>
                                     <TableCell align="left">{intervention.etat}</TableCell>
                                     <TableCell align="left">
-                                        <IconButton aria-label="edit" href={"/intervention/" + intervention.intervention} >
+                                        <IconButton aria-label="edit" href={"/intervention/" + intervention.id} >
                                             <EditIcon />
                                         </IconButton>
                                     </TableCell>

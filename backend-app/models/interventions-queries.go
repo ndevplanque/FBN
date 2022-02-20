@@ -2,41 +2,72 @@ package models
 
 import (
 	"context"
+	"database/sql"
+	"log"
 	"time"
 )
 
 // Les fonctions commençant par Q consistent en des requêtes SQL.
 
 // QGetIntervention renvoie une intervention selon son id ou une erreur
-func (fbn *FBNModel) QInterventionById(id int) (*Intervention, error) {
+func (fbn *FBNModel) QInterventionById(id int) (interface{}, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	var intervention Intervention
-
-	// démarrer la transactioon
-	tx, err := fbn.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
+	// resultat attendu
+	var intervention struct {
+		ID         int     `json:"id"`
+		DateHeure  string  `json:"date_heure"`
+		Etat       int     `json:"etat"`
+		Matricule  string  `json:"matricule"`
+		IDClient   int     `json:"id_client"`
+		DistanceKm float32 `json:"distance_km"`
+		Materiels  []struct {
+			NSerie      string `json:"n_serie"`
+			Commentaire string `json:"commentaire"`
+			TempsPasse  int    `json:"temps_passe"`
+		} `json:"materiels"`
 	}
 
-	// retrouver la liste du matériel concerné par l'intervention
 	query := `
-	SELECT n_serie, commentaire, temps_passe
-	FROM concerner
+	SELECT id, date_heure, etat, matricule, id_client
+	FROM intervention
 	WHERE id=$1
 	`
-	rows, err := tx.QueryContext(ctx, query, id)
+	row := fbn.DB.QueryRowContext(ctx, query, id)
+	var nullable sql.NullString
+	row.Scan(
+		&intervention.ID,
+		&intervention.DateHeure,
+		&intervention.Etat,
+		&nullable,
+		&intervention.IDClient,
+	)
+	if nullable.Valid {
+		intervention.Matricule = nullable.String
+	}
+
+	log.Println(intervention.IDClient)
+	// retrouver la liste du matériel concerné par l'intervention
+	query = `
+	SELECT n_serie, commentaire, temps_passe
+	FROM concerner
+	WHERE id_intervention=$1
+	`
+	rows, err := fbn.DB.QueryContext(ctx, query, id)
 	if err != nil {
-		_ = tx.Rollback()
 		return nil, err
 	}
 
 	for rows.Next() {
-		var materiel Concerner
+		var materiel struct {
+			NSerie      string `json:"n_serie"`
+			Commentaire string `json:"commentaire"`
+			TempsPasse  int    `json:"temps_passe"`
+		}
 		err := rows.Scan(
-			&materiel.Materiel.NSerie,
+			&materiel.NSerie,
 			&materiel.Commentaire,
 			&materiel.TempsPasse,
 		)
@@ -46,34 +77,21 @@ func (fbn *FBNModel) QInterventionById(id int) (*Intervention, error) {
 		intervention.Materiels = append(intervention.Materiels, materiel)
 	}
 
-	query = `
-	SELECT id, date_heure, etat, matricule, id_client
-	FROM intervention
-	WHERE id=$1
-	`
-	row := tx.QueryRowContext(ctx, query, id)
-	if err != nil {
-		_ = tx.Rollback()
-		return nil, err
-	}
-	row.Scan(
-		&intervention.ID,
-		&intervention.DateHeure,
-		&intervention.Etat,
-		&intervention.Technicien.Matricule,
-		&intervention.Client.ID,
-	)
-
-	// valider la transaction
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-
 	return &intervention, nil
 }
 
 // QInterventionsByTechnicien renvoie les interventions d'un technicien ou une erreur
-func (fbn *FBNModel) QInterventionsByTechnicien(matricule string) ([]*Intervention, error) {
+func (fbn *FBNModel) QInterventionsByTechnicien(matricule string) (interface{}, error) {
+
+	// résultat attendu
+	var interventions []struct {
+		ID         int     `json:"id"`
+		DateHeure  string  `json:"date_heure"`
+		Etat       string  `json:"etat"`
+		Matricule  string  `json:"matricule"`
+		IDClient   int     `json:"id_client"`
+		DistanceKm float32 `json:"distance_km"`
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -90,22 +108,31 @@ func (fbn *FBNModel) QInterventionsByTechnicien(matricule string) ([]*Interventi
 	if err != nil {
 		return nil, err
 	}
-
-	var interventions []*Intervention
 	for rows.Next() {
-		var intervention Intervention
+		var intervention struct {
+			ID         int     `json:"id"`
+			DateHeure  string  `json:"date_heure"`
+			Etat       string  `json:"etat"`
+			Matricule  string  `json:"matricule"`
+			IDClient   int     `json:"id_client"`
+			DistanceKm float32 `json:"distance_km"`
+		}
+		var nullable sql.NullString
 		err := rows.Scan(
 			&intervention.ID,
 			&intervention.DateHeure,
 			&intervention.Etat,
-			&intervention.Technicien.Matricule,
-			&intervention.Client.ID,
-			&intervention.Client.DistanceKm,
+			&nullable,
+			&intervention.ID,
+			&intervention.DistanceKm,
 		)
+		if nullable.Valid {
+			intervention.Matricule = nullable.String
+		}
 		if err != nil {
 			return nil, err
 		}
-		interventions = append(interventions, &intervention)
+		interventions = append(interventions, intervention)
 	}
 
 	return interventions, nil
@@ -129,13 +156,17 @@ func (fbn *FBNModel) QAllInterventions() ([]*Intervention, error) {
 	var interventions []*Intervention
 	for rows.Next() {
 		var intervention Intervention
+		var nullable sql.NullString
 		err := rows.Scan(
 			&intervention.ID,
 			&intervention.DateHeure,
 			&intervention.Etat,
-			&intervention.Technicien.Matricule,
-			&intervention.Client.ID,
+			&nullable,
+			&intervention.IDClient,
 		)
+		if nullable.Valid {
+			intervention.Matricule = nullable.String
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -146,22 +177,48 @@ func (fbn *FBNModel) QAllInterventions() ([]*Intervention, error) {
 }
 
 // QInsertIntervention ajoute un intervention dans la BDD ou renvoie une erreur
-func (fbn *FBNModel) QInsertIntervention(intervention Intervention) error {
+func (fbn *FBNModel) QInsertIntervention(intervention Intervention, materiels []Concerner) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	query := `
-	INSERT INTO intervention (date_heure, etat, matricule, id_client)
-	VALUES ($1, $2, $3, $4)
-	`
 
-	_, err := fbn.DB.ExecContext(ctx, query,
-		&intervention.DateHeure,
-		&intervention.Etat,
-		&intervention.Technicien.Matricule,
-		&intervention.Client.ID,
-	)
-
+	// démarrer la transactioon
+	tx, err := fbn.DB.BeginTx(ctx, nil)
 	if err != nil {
+		return err
+	}
+
+	// créer une intervention
+	query := `
+		INSERT INTO intervention (date_heure, etat, id_client)
+		VALUES ($1, $2, $3)
+		`
+	_, err = tx.ExecContext(ctx, query,
+		intervention.DateHeure,
+		intervention.Etat,
+		intervention.IDClient,
+	)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// ajouter des matériels concernés
+	query = `
+		INSERT INTO concerner (n_serie , id_intervention)
+		VALUES ($1, $2)
+		`
+	for _, materiel := range materiels {
+		_, err = tx.ExecContext(ctx, query,
+			materiel.NSerie,
+			intervention.ID)
+		if err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+
+	// valider la transaction
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 
@@ -169,7 +226,7 @@ func (fbn *FBNModel) QInsertIntervention(intervention Intervention) error {
 }
 
 // QUpdateIntervention modifie une intervention ou renvoie une erreur
-func (fbn *FBNModel) QUpdateIntervention(id int, intervention Intervention) error {
+func (fbn *FBNModel) QUpdateIntervention(id int, intervention Intervention, materiels []Concerner) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	query := `
@@ -181,8 +238,8 @@ func (fbn *FBNModel) QUpdateIntervention(id int, intervention Intervention) erro
 	_, err := fbn.DB.ExecContext(ctx, query,
 		&intervention.DateHeure,
 		&intervention.Etat,
-		&intervention.Technicien.Matricule,
-		&intervention.Client.ID,
+		&intervention.Matricule,
+		&intervention.IDClient,
 	)
 
 	if err != nil {
@@ -213,7 +270,7 @@ func (fbn *FBNModel) QAffectIntervention(id int, matricule string) error {
 }
 
 // QCloseIntervention clôture une intervention ou renvoie une erreur
-func (fbn *FBNModel) QCloseIntervention(intervention Intervention) error {
+func (fbn *FBNModel) QCloseIntervention(intervention Intervention, materiels []Concerner) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -230,12 +287,12 @@ func (fbn *FBNModel) QCloseIntervention(intervention Intervention) error {
 	SET commentaire=$1, temps_passe=$2
 	WHERE id_intervention=$3 AND n_serie=$4
 	`
-	for _, materiel := range intervention.Materiels {
+	for _, materiel := range materiels {
 		_, err = tx.ExecContext(ctx, query,
 			materiel.Commentaire,
 			materiel.TempsPasse,
 			intervention.ID,
-			materiel.Materiel.NSerie)
+			materiel.NSerie)
 		if err != nil {
 			_ = tx.Rollback()
 			return err

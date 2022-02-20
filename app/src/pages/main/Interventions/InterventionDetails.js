@@ -7,11 +7,12 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Stack } from "@mui/material";
+import { Button, Stack } from "@mui/material";
 import Typography from '@mui/material/Typography';
+import {jsonToLocaleDateTime} from '../../../functions/dateFunc'
 
 
-export default function Details() {
+export default function InterventionDetails() {
 
     const [intervention, setIntervention] = React.useState([]);
     const [error, setError] = React.useState(null);
@@ -27,10 +28,11 @@ export default function Details() {
                 return response.json();
             })
             .then(json => {
+                json.intervention.date_heure=jsonToLocaleDateTime(json.intervention.date_heure);
                 setIntervention(json.intervention);
                 setIsLoaded(true)
             });
-    }, [id])
+    }, [id]);
 
     if (error) { return <div>Erreur {error}</div> }
     else if (!isLoaded) { return <p>Chargement...</p> }
@@ -39,9 +41,9 @@ export default function Details() {
             <>
                 <h1>Fiche d'intervention</h1>
                 <Stack direction="column" justifyContent="center" alignItems="flex-start" spacing={2}>
-                    <Typography>Numéro d'intervention : {intervention.intervention}</Typography>
+                    <Typography>Numéro d'intervention : {intervention.id}</Typography>
                     <Link to="#">
-                        <Typography>Client : {intervention.client}</Typography>
+                        <Typography>Client : {intervention.id_client}</Typography>
                     </Link>
                     <Link to={`/technicien/details/${intervention.matricule}`} >
                         <Typography>Technicien : {intervention.matricule}</Typography>
@@ -49,28 +51,43 @@ export default function Details() {
                     <Typography>Date : {intervention.date_heure}</Typography>
                     <Typography>Etat : {intervention.etat}</Typography>
                 </Stack>
-                <h2>Matériels concernés</h2>
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell align="left">Numéro de série</TableCell>
-                                <TableCell align="left">Commentaire</TableCell>
-                                <TableCell align="left">Temps passé</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {intervention.materiel.map((materiel) => (
-                                <TableRow key={materiel.n_serie}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                    <TableCell component="th" scope="row">{materiel.n_serie}</TableCell>
-                                    <TableCell align="left">{materiel.commentaire}</TableCell>
-                                    <TableCell align="left">{materiel.temps_passe}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+
+                { // si interventions.materiels !== null
+                    intervention.materiels
+                        ? <>
+                            <h2>Matériels concernés</h2>
+                            <TableContainer component={Paper}>
+                                <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell align="left">Numéro de série</TableCell>
+                                            <TableCell align="left">Commentaire</TableCell>
+                                            <TableCell align="left">Temps passé</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {intervention.materiels.map((materiel) => (
+                                            <TableRow key={materiel.n_serie}
+                                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                                <TableCell component="th" scope="row">{materiel.n_serie}</TableCell>
+                                                <TableCell align="left">{materiel.commentaire}</TableCell>
+                                                <TableCell align="left">{materiel.temps_passe}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </>
+                        : <>
+                            <Button
+                                href={"/intervention/" + intervention.id}
+                                variant="contained"
+                                color="primary"
+                            >
+                                Ajouter des matériels
+                            </Button>
+                        </>
+                }
             </>
         )
     }

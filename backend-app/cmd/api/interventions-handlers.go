@@ -46,7 +46,7 @@ func (app *application) HGetOneIntervention(w http.ResponseWriter, r *http.Reque
 
 // HGetOneIntervention est le handler permettant de consulter les interventions d'un technicien.
 // Il est appelé par l'URL "/v1/interventions/:matricule".
-func (app *application) HGetInterventions(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (app *application) HGetInterventionsByTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// récuperer :matricule
 	matricule := ps.ByName("matricule")
@@ -108,10 +108,11 @@ func (app *application) HEditIntervention(w http.ResponseWriter, r *http.Request
 
 	// lire le JSON
 	var payload struct {
-		DateHeure  string `json:"date_heure"`
-		Etat       string `json:"etat"`
-		Technicien string `json:"technicien"`
-		Materiels  []struct {
+		IDClient  string `json:"id_client"`
+		DateHeure string `json:"date_heure"`
+		Etat      int    `json:"etat"`
+		Matricule string `json:"matricule"`
+		Materiels []struct {
 			NSerie      string `json:"n_serie"`
 			Commentaire string `json:"commentaire"`
 			TempsPasse  int    `json:"temps_passe"`
@@ -126,24 +127,32 @@ func (app *application) HEditIntervention(w http.ResponseWriter, r *http.Request
 
 	// assigner les valeurs du JSON à une variable suivant le modèle Intervention
 	var intervention models.Intervention
-	intervention.DateHeure, err = time.Parse("2006-01-02", payload.DateHeure)
+	intervention.IDClient, err = strconv.Atoi(payload.IDClient)
 	if err != nil {
+		err = errors.New("le JSON ne convient pas : " + err.Error())
 		app.errorJSON(w, err)
 		return
 	}
-	intervention.Etat = payload.Etat
-	intervention.Technicien.Matricule = payload.Technicien
+	intervention.DateHeure, err = time.Parse("2006-01-02", payload.DateHeure)
+	if err != nil {
+		err = errors.New("le JSON ne convient pas : " + err.Error())
+		app.errorJSON(w, err)
+		return
+	}
+	intervention.Etat = strconv.Itoa(payload.Etat)
+	intervention.Matricule = payload.Matricule
+	var materiels []models.Concerner
 	for _, materiel := range payload.Materiels {
 		var temp models.Concerner
-		temp.Materiel.NSerie = materiel.NSerie
+		temp.NSerie = materiel.NSerie
 		temp.Commentaire = materiel.Commentaire
 		temp.TempsPasse = materiel.TempsPasse
-		intervention.Materiels = append(intervention.Materiels, temp)
+		materiels = append(materiels, temp)
 	}
 
 	// choix de la requête SQL à exécuter
 	if param == "nouveau" {
-		err = app.models.DB.QInsertIntervention(intervention)
+		err = app.models.DB.QInsertIntervention(intervention, materiels)
 		if err != nil {
 			app.errorJSON(w, err)
 			return
@@ -155,7 +164,7 @@ func (app *application) HEditIntervention(w http.ResponseWriter, r *http.Request
 			app.errorJSON(w, err)
 			return
 		}
-		err = app.models.DB.QUpdateIntervention(id, intervention)
+		err = app.models.DB.QUpdateIntervention(id, intervention, materiels)
 		if err != nil {
 			app.errorJSON(w, err)
 			return
@@ -163,7 +172,7 @@ func (app *application) HEditIntervention(w http.ResponseWriter, r *http.Request
 	}
 
 	// retourner une réponse positive
-	err = app.writeJSON(w, http.StatusOK, JsonResponse{OK: true}, "response")
+	err = app.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
@@ -195,7 +204,7 @@ func (app *application) HAffectIntervention(w http.ResponseWriter, r *http.Reque
 	}
 
 	// envoyer le résultat
-	err = app.writeJSON(w, http.StatusOK, JsonResponse{OK: true}, "response")
+	err = app.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
@@ -233,16 +242,17 @@ func (app *application) HCloseIntervention(w http.ResponseWriter, r *http.Reques
 	// passer les données du JSON vers une variable suivant le modèle d'une intervention
 	var intervention models.Intervention
 	intervention.ID = id
+	var materiels []models.Concerner
 	for _, materiel := range payload.Materiels {
 		var temp models.Concerner
-		temp.Materiel.NSerie = materiel.NSerie
+		temp.NSerie = materiel.NSerie
 		temp.Commentaire = materiel.Commentaire
 		temp.TempsPasse = materiel.TempsPasse
-		intervention.Materiels = append(intervention.Materiels, temp)
+		materiels = append(materiels, temp)
 	}
 
 	// exécuter la requête SQL
-	err = app.models.DB.QCloseIntervention(intervention)
+	err = app.models.DB.QCloseIntervention(intervention, materiels)
 	if err != nil {
 		err = errors.New("échec de la requête : " + err.Error())
 		app.errorJSON(w, err)
@@ -250,7 +260,7 @@ func (app *application) HCloseIntervention(w http.ResponseWriter, r *http.Reques
 	}
 
 	// envoyer le résultat
-	err = app.writeJSON(w, http.StatusOK, JsonResponse{OK: true}, "response")
+	err = app.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
