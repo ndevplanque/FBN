@@ -35,7 +35,7 @@ type Client struct {
 	Email              string  `json:"email"`
 	DistanceKm         float32 `json:"distance_km"`
 	DeplacementMinutes float32 `json:"deplacement_minutes"`
-	Agence             Agence  `json:"agence"`
+	CodeAgence         string  `json:"code_agence"`
 }
 
 // Contrat est le modèle pour les contrats
@@ -43,7 +43,7 @@ type Contrat struct {
 	ID                 int       `json:"id"`
 	DateSignature      time.Time `json:"date_signature"`
 	DateRenouvellement time.Time `json:"date_renouvellement"`
-	Client             Client    `json:"client"`
+	Client             int       `json:"id_client"`
 }
 
 // Gerant est le modèle pour les gérants
@@ -57,36 +57,34 @@ type Gerant struct {
 	Ville        string    `json:"ville"`
 	Pays         string    `json:"pays"`
 	DateEmbauche time.Time `json:"date_embauche"`
-	Agence       Agence    `json:"agence"`
+	CodeAgence   string    `json:"code_agence"`
 }
 
 // Intervention est le modèle pour les interventions
 type Intervention struct {
-	ID         int         `json:"id"`
-	DateHeure  time.Time   `json:"date_heure"`
-	Etat       string      `json:"etat"`
-	Technicien Technicien  `json:"technicien"`
-	Client     Client      `json:"client"`
-	Materiels  []Concerner `json:"materiels"`
+	ID        int       `json:"id"`
+	DateHeure time.Time `json:"date_heure"`
+	Etat      string    `json:"etat"`
+	Matricule string    `json:"matricule"`
+	IDClient  int       `json:"id_client"`
 }
 
 type Concerner struct {
-	Intervention Intervention `json:"intervention"`
-	Materiel     Materiel     `json:"materiel"`
-	Commentaire  string       `json:"commentaire"`
-	TempsPasse   int          `json:"temps_passe"`
+	IDIntervention int    `json:"id_intervention"`
+	NSerie         string `json:"n_serie"`
+	Commentaire    string `json:"commentaire"`
+	TempsPasse     int    `json:"temps_passe"`
 }
 
 // Materiel est le modèle pour les matériels
 type Materiel struct {
-	NSerie           string      `json:"n_serie"`
-	DateVente        time.Time   `json:"date_vente"`
-	DateInstallation time.Time   `json:"date_installation"`
-	PrixVente        float32     `json:"prix_vente"`
-	Emplacement      string      `json:"emplacement"`
-	Reference        Type        `json:"reference"`
-	Contrat          Contrat     `json:"contrat"`
-	Interventions    []Concerner `json:"interventions"`
+	NSerie           string    `json:"n_serie"`
+	DateVente        time.Time `json:"date_vente"`
+	DateInstallation time.Time `json:"date_installation"`
+	PrixVente        float32   `json:"prix_vente"`
+	Emplacement      string    `json:"emplacement"`
+	Reference        string    `json:"reference"`
+	Contrat          int       `json:"id_contrat"`
 }
 
 // Technicien est le modèle pour les techniciens
@@ -96,15 +94,15 @@ type Technicien struct {
 	Nom               string    `json:"nom"`
 	Prenom            string    `json:"prenom"`
 	Adresse           string    `json:"adresse"`
-	CodePostal        string    `json:"codePostal"`
+	CodePostal        string    `json:"code_postal"`
 	Ville             string    `json:"ville"`
 	Pays              string    `json:"pays"`
-	DateEmbauche      time.Time `json:"dateEmbauche"`
+	DateEmbauche      time.Time `json:"date_embauche"`
 	Qualification     string    `json:"qualification"`
-	DateQualification time.Time `json:"dateQualification"`
+	DateQualification time.Time `json:"date_qualification"`
 	Email             string    `json:"email"`
 	Telephone         string    `json:"telephone"`
-	Agence            Agence    `json:"agence"`
+	CodeAgence        string    `json:"code_agence"`
 }
 
 // Type est le modèle pour les types de matériel
