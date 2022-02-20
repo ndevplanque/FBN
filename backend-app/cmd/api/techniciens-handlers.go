@@ -99,7 +99,7 @@ func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request
 	}
 
 	// retourner une réponse positive
-	err = app.writeJSON(w, http.StatusOK, JsonResponse{OK: true}, "response")
+	err = app.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)
@@ -125,15 +125,15 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 		Nom               string `json:"nom"`
 		Prenom            string `json:"prenom"`
 		Adresse           string `json:"adresse"`
-		CodePostal        string `json:"codePostal"`
+		CodePostal        string `json:"code_postal"`
 		Ville             string `json:"ville"`
 		Pays              string `json:"pays"`
-		DateEmbauche      string `json:"dateEmbauche"`
+		DateEmbauche      string `json:"date_embauche"`
 		Qualification     string `json:"qualification"`
-		DateQualification string `json:"dateQualification"`
+		DateQualification string `json:"date_qualification"`
 		Email             string `json:"email"`
 		Telephone         string `json:"telephone"`
-		Agence            string `json:"agence"`
+		CodeAgence        string `json:"code_agence"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
@@ -165,7 +165,7 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 	}
 	technicien.Email = payload.Email
 	technicien.Telephone = payload.Telephone
-	technicien.Agence.Code = payload.Agence
+	technicien.CodeAgence = payload.CodeAgence
 
 	// choix de la requête SQL à exécuter
 	if oldMatricule == "nouveau" {
@@ -183,7 +183,7 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// retourner une réponse positive
-	err = app.writeJSON(w, http.StatusOK, JsonResponse{OK: true}, "response")
+	err = app.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
 		app.errorJSON(w, err)

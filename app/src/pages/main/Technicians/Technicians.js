@@ -53,13 +53,14 @@ export default function Technicians() {
                         <TableBody>
                             {techniciens.map((technicien) => (
                                 <TableRow key={technicien.matricule}
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: "pointer" }}
+                                    onClick={() => { document.location = "/technicien/details/" + technicien.matricule }}>
                                     <TableCell component="th" scope="row">{technicien.matricule}</TableCell>
                                     <TableCell align="left">{technicien.nom}</TableCell>
                                     <TableCell align="left">{technicien.prenom}</TableCell>
                                     <TableCell align="left">{technicien.email}</TableCell>
                                     <TableCell align="left">{technicien.telephone}</TableCell>
-                                    <TableCell align="left">{technicien.agence}</TableCell>
+                                    <TableCell align="left">{technicien.code_agence}</TableCell>
                                     <TableCell align="left">
                                         <IconButton aria-label="edit" href={"/technicien/" + technicien.matricule} >
                                             <EditIcon />

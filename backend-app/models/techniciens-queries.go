@@ -41,7 +41,7 @@ func (m *FBNModel) QTechnicienById(matricule string) (*Technicien, error) {
 		&technicien.DateQualification,
 		&technicien.Email,
 		&technicien.Telephone,
-		&technicien.Agence.Code,
+		&technicien.CodeAgence,
 	)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func (m *FBNModel) QAllTechniciens() ([]*Technicien, error) {
 			&technicien.DateQualification,
 			&technicien.Email,
 			&technicien.Telephone,
-			&technicien.Agence.Code,
+			&technicien.CodeAgence,
 		)
 		if err != nil {
 			return nil, err
@@ -123,7 +123,7 @@ func (m *FBNModel) QInsertTechnicien(technicien Technicien) error {
 		technicien.DateQualification,
 		technicien.Email,
 		technicien.Telephone,
-		technicien.Agence.Code,
+		technicien.CodeAgence,
 	)
 
 	if err != nil {
@@ -159,7 +159,7 @@ func (m *FBNModel) QUpdateTechnicien(oldMatricule string, technicien Technicien)
 		technicien.DateQualification,
 		technicien.Email,
 		technicien.Telephone,
-		technicien.Agence.Code,
+		technicien.CodeAgence,
 		oldMatricule,
 	)
 
