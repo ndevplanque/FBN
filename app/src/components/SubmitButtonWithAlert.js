@@ -24,14 +24,16 @@ export default function CustomizedSnackbars(props) {
 
   return (
     <>
-      <Button variant={props.btnVariant} onClick={handleClick} type="submit" color={props.btnColor}>
+      <Button variant={props.btnVariant} onClick={()=>handleClick()} type="submit" color={props.btnColor}>
         {props.btnText}
       </Button>
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
-        <Alert onClose={handleClose} severity={props.severity} >
-          {props.message}
-        </Alert>
-      </Snackbar>
+
+      {props.severity !== ""
+        ? <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+          <Alert onClose={handleClose} severity={props.severity}>{props.message}</Alert>
+        </Snackbar>
+        : <></>}
+
       {props.severity !== "" ? <Alert severity={props.severity}>{props.message}</Alert> : <></>}
     </>
   );
