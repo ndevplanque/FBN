@@ -7,7 +7,7 @@
   <?php foreach ($interventions as $intervention): ?>
   <li>
       <a href="<?=$index?>/intervention?id=<?=$intervention['id']?>">
-          <?= 'Intervention '.$intervention['id'].' : '.$intervention['matricule'] ?>
+          <?= 'Intervention '.$intervention['id'].', '.$intervention['client'].' : '. $intervention['prenom'].' '.$intervention['nom']?>
       </a>
   </li>
   <?php endforeach; ?>
