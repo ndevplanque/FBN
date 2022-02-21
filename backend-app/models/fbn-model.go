@@ -1,117 +1,111 @@
 package models
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+)
 
-// FBNModel est le nom du model de la BDD "fbn"
+// FBNModel est le nom du modèle de la BDD "fbn"
 type FBNModel struct {
 	DB *sql.DB
 }
 
-// Agence est le type pour les agences
+// Agence est le modèle pour les agences
 type Agence struct {
-	Agence     string `json:"agence"`
+	Code       string `json:"code"`
 	Nom        string `json:"nom"`
 	Adresse    string `json:"adresse"`
-	CodePostal string `json:"codePostal"`
+	CodePostal string `json:"code_postal"`
 	Ville      string `json:"ville"`
 	Telephone  string `json:"telephone"`
 	Email      string `json:"email"`
 }
 
-// Client est le type pour les clients
+// Client est le modèle pour les clients
 type Client struct {
-	Client             string  `json:"client"`
-	RaisonSociale      string  `json:"raisonSociale"`
+	ID                 int     `json:"id"`
+	RaisonSociale      string  `json:"raison_sociale"`
 	Siren              string  `json:"siren"`
 	Ape                string  `json:"ape"`
 	Adresse            string  `json:"adresse"`
-	CodePostal         string  `json:"codePostal"`
+	CodePostal         string  `json:"code_postal"`
 	Ville              string  `json:"ville"`
 	Pays               string  `json:"pays"`
 	Telephone          string  `json:"telephone"`
 	Email              string  `json:"email"`
-	DistanceKm         float32 `json:"distanceKm"`
-	DeplacementMinutes float32 `json:"deplacementMinutes"`
-	Agence             string  `json:"agence"`
-	// foreign key (agence) references Agence (agence)
+	DistanceKm         float32 `json:"distance_km"`
+	DeplacementMinutes float32 `json:"deplacement_minutes"`
+	CodeAgence         string  `json:"code_agence"`
 }
 
-// Concerner sert dans l'association n-aire de Intervention et Matériel
-type Concerner struct {
-	Serie        string `json:"Serie"`
-	Intervention string `json:"Intervention"`
-	// foreign key (intervention) references Intervention (intervention)
-	// foreign key (serie) references Materiel (serie)
-}
-
-// Contrat est le type pour les contrats
+// Contrat est le modèle pour les contrats
 type Contrat struct {
-	Contrat            string `json:"contrat"`
-	DateSignature      string `json:"dateSignature"`
-	DateRenouvellement string `json:"dateRenouvellement"`
-	Client             string `json:"client"`
-	// foreign key (client) references Client (client)
+	ID                 int       `json:"id"`
+	DateSignature      time.Time `json:"date_signature"`
+	DateRenouvellement time.Time `json:"date_renouvellement"`
+	Client             int       `json:"id_client"`
 }
 
-// Gerant est le type pour les gérants
+// Gerant est le modèle pour les gérants
 type Gerant struct {
-	Matricule    string `json:"matricule"`
-	Sexe         string `json:"sexe"` // https://golangbyexample.com/character-in-go/
-	Nom          string `json:"nom"`
-	Prenom       string `json:"prenom"`
-	Adresse      string `json:"adresse"`
-	CodePostal   string `json:"codePostal"`
-	Ville        string `json:"ville"`
-	Pays         string `json:"pays"`
-	DateEmbauche string `json:"dateEmbauche"`
-	Agence       string `json:"agence"`
-	// foreign key (agence) references Agence (agence)
+	Matricule    string    `json:"matricule"`
+	Sexe         string    `json:"sexe"` // https://golangbyexample.com/character-in-go/
+	Nom          string    `json:"nom"`
+	Prenom       string    `json:"prenom"`
+	Adresse      string    `json:"adresse"`
+	CodePostal   string    `json:"code_postal"`
+	Ville        string    `json:"ville"`
+	Pays         string    `json:"pays"`
+	DateEmbauche time.Time `json:"date_embauche"`
+	CodeAgence   string    `json:"code_agence"`
 }
 
-// Intervention est le type pour les interventions
+// Intervention est le modèle pour les interventions
 type Intervention struct {
-	Intervention string `json:"Intervention"`
-	DateHeure    string `json:"dateHeure"`
-	Etat         string `json:"etat"`
-	Matricule    string `json:"matricule"`
-	Client       string `json:"client"`
-	// foreign key (matricule) references Technicien (matricule)
-	// foreign key (client) references Client (client)
+	ID        int       `json:"id"`
+	DateHeure time.Time `json:"date_heure"`
+	Etat      string    `json:"etat"`
+	Matricule string    `json:"matricule"`
+	IDClient  int       `json:"id_client"`
 }
 
-// Materiel est le type pour les matériels
+type Concerner struct {
+	IDIntervention int    `json:"id_intervention"`
+	NSerie         string `json:"n_serie"`
+	Commentaire    string `json:"commentaire"`
+	TempsPasse     int    `json:"temps_passe"`
+}
+
+// Materiel est le modèle pour les matériels
 type Materiel struct {
-	Serie            string  `json:"Serie"`
-	DateVente        string  `json:"dateVente"`
-	DateInstallation string  `json:"dateInstallation"`
-	PrixVente        float32 `json:"prixVente"`
-	Emplacement      string  `json:"emplacement"`
-	Reference        string  `json:"reference"`
-	Contrat          string  `json:"contrat"`
-	// foreign key (reference) references Type (reference)
-	// foreign key (contrat) references Contrat (contrat)
+	NSerie           string    `json:"n_serie"`
+	DateVente        time.Time `json:"date_vente"`
+	DateInstallation time.Time `json:"date_installation"`
+	PrixVente        float32   `json:"prix_vente"`
+	Emplacement      string    `json:"emplacement"`
+	Reference        string    `json:"reference"`
+	Contrat          int       `json:"id_contrat"`
 }
 
-// Technicien est le type pour les techniciens
+// Technicien est le modèle pour les techniciens
 type Technicien struct {
-	Matricule         string `json:"matricule"`
-	Sexe              string `json:"sexe"` // https://golangbyexample.com/character-in-go/
-	Nom               string `json:"nom"`
-	Prenom            string `json:"prenom"`
-	Adresse           string `json:"adresse"`
-	CodePostal        string `json:"codePostal"`
-	Ville             string `json:"ville"`
-	Pays              string `json:"pays"`
-	DateEmbauche      string `json:"dateEmbauche"`
-	Qualification     string `json:"qualification"`
-	DateQualification string `json:"dateQualification"`
-	Email             string `json:"email"`
-	Telephone         string `json:"telephone"`
-	Agence            string `json:"agence"`
-	// foreign key (agence) references Agence (agence)
+	Matricule         string    `json:"matricule"`
+	Sexe              string    `json:"sexe"`
+	Nom               string    `json:"nom"`
+	Prenom            string    `json:"prenom"`
+	Adresse           string    `json:"adresse"`
+	CodePostal        string    `json:"code_postal"`
+	Ville             string    `json:"ville"`
+	Pays              string    `json:"pays"`
+	DateEmbauche      time.Time `json:"date_embauche"`
+	Qualification     string    `json:"qualification"`
+	DateQualification time.Time `json:"date_qualification"`
+	Email             string    `json:"email"`
+	Telephone         string    `json:"telephone"`
+	CodeAgence        string    `json:"code_agence"`
 }
 
-// Type est le type pour les types de matériel
+// Type est le modèle pour les types de matériel
 type Type struct {
 	Reference string `json:"reference"`
 	Libelle   string `json:"libelle"`

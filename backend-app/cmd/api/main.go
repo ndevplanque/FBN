@@ -16,6 +16,7 @@ import (
 
 const version = "1.0.0"
 
+// config contient le port d'écoute et l'URL de la BDD.
 type config struct {
 	port int
 	env  string
@@ -24,13 +25,8 @@ type config struct {
 	}
 }
 
-type AppStatus struct {
-	// Maj		type	nom en JSON
-	Status      string `json:"status"`
-	Environment string `json:"environment"`
-	Version     string `json:"version"`
-}
-
+// application contient la config, l'emplacement d'affichage des logs, et les modèles de données.
+// Elle représente le noyau logique de l'API. Toutes les fonctions de notre programme lui sont greffées.
 type application struct {
 	config config
 	logger *log.Logger
@@ -38,27 +34,32 @@ type application struct {
 }
 
 func main() {
-	var cfg config
 
+	// les flags permettent de définir les os.Args manuellement
+	var cfg config
 	flag.IntVar(&cfg.port, "port", 4000, "Server port to listen on")
 	flag.StringVar(&cfg.env, "env", "development", "Application environment (development|production)")
 	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://adminfbn:fbnlateamdesboss@localhost/fbn?sslmode=disable", "Postgres connection string")
 	flag.Parse()
 
+	// logger définit l'emplacement d'affichage des logs
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
+	// connexion à la BDD
 	db, err := openDB(cfg)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	defer db.Close()
 
+	// app est le noyau logique de notre API
 	app := &application{
 		config: cfg,
 		logger: logger,
 		models: models.NewModels(db),
 	}
 
+	// srv représente le serveur, il écoute un port et redirige les demandes vers le routeur
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
 		Handler:      app.routes(),
@@ -69,12 +70,14 @@ func main() {
 
 	logger.Println("Starting server on port", cfg.port)
 
+	// le serveur se met en route
 	err = srv.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}
 }
 
+// openDB récupère l'URL de la BDD via son paramètre config, et renvoie la BDD ouverte ou une erreur.
 func openDB(cfg config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.db.dsn)
 	if err != nil {

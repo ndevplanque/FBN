@@ -1,0 +1,54 @@
+.carres {
+    filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+    border-radius: 10px;
+    width: 350px;
+    height: 200px;
+    /* className="carres" */
+}
+
+#frameInterv {
+    background: radial-gradient(135.92% 182.33% at 64.51% 38.51%, #03C1FD 0%, rgba(54, 179, 233, 0) 100%);
+}
+
+#frameKilo {
+    background: radial-gradient(104.31% 408.63% at 49.86% 66.95%, #0038FF 0%, rgba(12, 69, 251, 0.868209) 35.79%, rgba(90, 151, 223, 0) 100%);
+}
+
+#frameTmp {
+    background: linear-gradient(180deg, #56FFE1 0%, rgba(16, 191, 202, 0.864583) 99.99%, rgba(0, 255, 240, 0) 100%);
+}
+
+#nbrInterv {
+    width: 46px;
+    height: 72px;
+
+    margin-left: -71px;
+    margin-top: 65px;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: normal;
+}
+
+#icokilo {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    left: 225px;
+    top: 51px;
+}
+
+#icoInterv {
+    width: 100px;
+    height: 100px;
+    margin-top: -75px;
+    margin-left: 225px;
+
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: url("../utilities/fonts/Poppins-Regular.otf") format('opentype');
+    font-weight: normal;
+    font-style: normal;
+
+}

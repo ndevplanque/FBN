@@ -1,69 +1,53 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Routes, Route, Redirect } from "react-router-dom";
 
-import Clients from "./pages/main/Clients";
-import Contracts from "./pages/main/Contracts";
-import Home from "./pages/main/Home/Home";
-import Interventions from "./pages/main/Interventions/Interventions";
-import InterventionsNew from "./pages/main/Interventions/InterventionsNew";
-import InterventionsForm from "./pages/main/Interventions/InterventionsForm";
-import Materials from "./pages/main/Materials";
-import Technicians from "./pages/main/Technicians/Technicians";
-import EditTechnician from "./pages/main/Technicians/EditTechnician";
+import Home from "./Home/Home";
+import InterventionsList from "./Interventions/InterventionsList";
+import InterventionDetails from "./Interventions/InterventionDetails";
+import InterventionEdit from "./Interventions/InterventionEdit";
+import TechniciansList from "./Technicians/TechniciansList";
+import TechnicianDetails from "./Technicians/TechnicianDetails";
+import TechnicianEdit from "./Technicians/TechnicianEdit";
 
-import Agency from "./pages/secondaries/Agency";
-import LoginPage from "./pages/secondaries/LoginPage";
-import Logout from "./pages/secondaries/Logout";
-import Profile from "./pages/secondaries/Profile";
-import Support from "./pages/secondaries/Support";
-
-import Err404 from "./pages/errors/Err404";
-
-import Mask from './components/Mask/Mask';
+import LoginPage from "./LoginPage";
+import Navigation from './Navigation';
 import './App.css';
 
-const App = () => {
-  // type utilisateur (technicien, gerant, autres/pas co )
-  var role = "gerant";
+export default function App() {
 
-  switch (role) {
-    case "technicien":
-    case "gerant":
-      return (
-        <div className="App">
-          <br/>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Mask role={role} />}>
-                <Route index element={<Home role={role} />} />
-                {/*<Route path="authentification" element={<LoginPage />} /> */}
-                
-                {/* pages/main */}
-                <Route path="clients" element={<Clients />} />
-                <Route path="contrats" element={<Contracts />} />
-                <Route path="techniciens" element={<Technicians />} />
-                <Route path={"technicien/:matricule"} element={<EditTechnician />} />
-                <Route path="interventions" element={<Interventions role={role} />} />
-                <Route path="interventions/affecter" element={<InterventionsNew />} />
-                <Route path="interventions/completer" element={<InterventionsForm />} />
-                <Route path="materiel" element={<Materials />} />
+  const [loggedIn, setLoggedIn] = React.useState(true);
 
-                {/* pages/secondaries */}
-                <Route path="agence" element={<Agency />} />
-                <Route path="profil" element={<Profile />} />
-                <Route path="support" element={<Support />} />
-                <Route path="deconnexion" element={<Logout />} />
+  return (
+    <div className="App">
+      <br />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element=
+            {// si l'utilisateur n'est pas connecté, le rediriger vers la page de connexion
+              loggedIn
+                ? <Navigation />
+                : <LoginPage/>
+            }>
 
-                {/* pages/errors */}
-                <Route path="*" element={<Err404 />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-          <br/>
-        </div>
-      );
-    default:
-      return <LoginPage />;
-  }
+
+
+            <Route index element={<Home />} />
+
+
+
+            <Route path="techniciens" element={<TechniciansList />} />
+            <Route path="technicien/:matricule" element={<TechnicianEdit />} />
+            <Route path="technicien/details/:matricule" element={<TechnicianDetails />} />
+
+            <Route path="interventions" element={<InterventionsList />} />
+            <Route path="intervention/:id" element={<InterventionEdit />} />
+            <Route path="intervention/details/:id" element={<InterventionDetails />} />
+
+            <Route path="*" element={<><h1>Erreur 404</h1><p>Page introuvable</p></>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+      <br />
+    </div>
+  );
 }
-
-export default App;
