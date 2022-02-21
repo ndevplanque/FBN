@@ -6,8 +6,8 @@
   <ul>
   <?php foreach ($interventions as $intervention): ?>
   <li>
-      <a href="/intervention?id=<?php echo $intervention['id'] ?>">
-          <?php echo "Intervention $intervention[id] : $intervention[matricule]" ?>
+      <a href="<?=$index?>/intervention?id=<?=$intervention['id']?>">
+          <?= 'Intervention '.$intervention['id'].' : '.$intervention['matricule'] ?>
       </a>
   </li>
   <?php endforeach; ?>
@@ -15,5 +15,5 @@
 <?php
 // mettre tout le html écris au-dessus dans la variable $content au lieu de l'afficher
   $content = ob_get_clean();
-  include 'base.php'
+  require_once 'base_template.php'
 ?>

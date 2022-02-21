@@ -1,6 +1,6 @@
 <?php
-
 function get_all_interventions(){
+  include_once 'db_config.php';
     // se connecter
     $conn=getConnexion();
     
@@ -11,7 +11,7 @@ function get_all_interventions(){
     $stmt->execute();
   
     // demander un retour sous forme de tableau associatif
-    $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
+    $result = $stmt->fetchAll();
     
 
     // fermer la connexion
