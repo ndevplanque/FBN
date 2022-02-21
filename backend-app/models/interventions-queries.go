@@ -24,7 +24,9 @@ func (fbn *FBNModel) QInterventionById(id int) (interface{}, error) {
 		IDClient   int     `json:"id_client"`
 		DistanceKm float32 `json:"distance_km"`
 		Materiels  []struct {
+			IDContrat   int    `json:"id_contrat"`
 			NSerie      string `json:"n_serie"`
+			Emplacement string `json:"emplacement"`
 			Commentaire string `json:"commentaire"`
 			TempsPasse  int    `json:"temps_passe"`
 		} `json:"materiels"`
@@ -51,9 +53,12 @@ func (fbn *FBNModel) QInterventionById(id int) (interface{}, error) {
 	log.Println(intervention.IDClient)
 	// retrouver la liste du matériel concerné par l'intervention
 	query = `
-	SELECT n_serie, commentaire, temps_passe
-	FROM concerner
-	WHERE id_intervention=$1
+	SELECT m.id_contrat, i.n_serie, m.emplacement, i.commentaire, i.temps_passe
+	FROM concerner i, materiel m, contrat c
+	WHERE id_intervention = $1
+	  AND m.n_serie = i.n_serie
+	  AND m.id_contrat = c.id
+	ORDER BY 1, 2, 3 ASC
 	`
 	rows, err := fbn.DB.QueryContext(ctx, query, id)
 	if err != nil {
@@ -62,12 +67,16 @@ func (fbn *FBNModel) QInterventionById(id int) (interface{}, error) {
 
 	for rows.Next() {
 		var materiel struct {
+			IDContrat   int    `json:"id_contrat"`
 			NSerie      string `json:"n_serie"`
+			Emplacement string `json:"emplacement"`
 			Commentaire string `json:"commentaire"`
 			TempsPasse  int    `json:"temps_passe"`
 		}
 		err := rows.Scan(
+			&materiel.IDContrat,
 			&materiel.NSerie,
+			&materiel.Emplacement,
 			&materiel.Commentaire,
 			&materiel.TempsPasse,
 		)
