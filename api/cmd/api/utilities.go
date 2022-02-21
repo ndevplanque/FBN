@@ -12,17 +12,17 @@ type JsonConfirm struct {
 }
 
 // writeJSON émet une réponse contenant un JSON nommé selon "wrap" et contenant les données "data".
-func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, wrap string) error {
-	wrapper := make(map[string]interface{})
+func (App *Application) writeJSON(w http.ResponseWriter, status int, data interface{}, wrap string) error {
+	wrApper := make(map[string]interface{})
 
-	wrapper[wrap] = data
+	wrApper[wrap] = data
 
-	js, err := json.MarshalIndent(wrapper, "", "\t")
+	js, err := json.MarshalIndent(wrApper, "", "\t")
 	if err != nil {
 		return err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "Application/json")
 	w.WriteHeader(status)
 	w.Write(js)
 
@@ -31,14 +31,14 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data interf
 
 // errorJSON émet une réponse contenant un JSON décrivant l'erreur.
 // L'erreur est également affichée dans le terminal.
-func (app *application) errorJSON(w http.ResponseWriter, err error) {
+func (App *Application) errorJSON(w http.ResponseWriter, err error) {
 	// afficher l'erreur dans la console serveur
-	app.logger.Print(err)
+	App.logger.Print(err)
 
 	// afficher l'erreur dans le JSON client
 	type jsonError struct {
 		Message string `json:"message"`
 	}
 	theError := jsonError{Message: err.Error()}
-	app.writeJSON(w, http.StatusBadRequest, theError, "error")
+	App.writeJSON(w, http.StatusBadRequest, theError, "error")
 }

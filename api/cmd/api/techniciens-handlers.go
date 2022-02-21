@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend-app/models"
+	"api/models"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -34,75 +34,75 @@ type TechnicienPayload struct {
 
 // HGetOneTechnicien est le handler permettant de consulter un technicien en particulier par son matricule.
 // Il est appelé par l'URL "/v1/technicien/get/:matricule".
-func (app *application) HGetOneTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (App *Application) HGetOneTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// récuperer :matricule
 	matricule := ps.ByName("matricule")
 	if matricule == "" {
 		err := errors.New("renseignez un matricule (" + matricule + " incorrect)")
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
-	app.logger.Println("Matricule:", matricule)
+	App.logger.Println("Matricule:", matricule)
 
 	// exécuter la requête SQL
-	technicien, err := app.models.DB.QTechnicienById(matricule)
+	technicien, err := App.models.DB.QTechnicienById(matricule)
 	if err != nil {
 		err = errors.New("échec de la requête : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 
 	// envoyer le résultat
-	err = app.writeJSON(w, http.StatusOK, technicien, "technicien")
+	err = App.writeJSON(w, http.StatusOK, technicien, "technicien")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 }
 
 // HGetAllTechnicien est le handler permettant de consulter l'ensemble des techniciens.
 // Il est appelé par l'URL "/v1/techniciens".
-func (app *application) HGetAllTechniciens(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (App *Application) HGetAllTechniciens(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// exécuter la requête SQL
-	techniciens, err := app.models.DB.QAllTechniciens()
+	techniciens, err := App.models.DB.QAllTechniciens()
 	if err != nil {
 		err = errors.New("échec de la requête : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 
 	// envoyer le résultat
-	err = app.writeJSON(w, http.StatusOK, techniciens, "techniciens")
+	err = App.writeJSON(w, http.StatusOK, techniciens, "techniciens")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 }
 
 // HDeleteTechnicien est le handler permettant de supprimer un technicien selon son matricule.
 // Il est appelé par l'URL "/v1/technicien/delete/:matricule".
-func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (App *Application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// récuperer :matricule
 	matricule := ps.ByName("matricule")
 
 	// exécuter la requête SQL
-	err := app.models.DB.QDeleteTechnicien(matricule)
+	err := App.models.DB.QDeleteTechnicien(matricule)
 	if err != nil {
 		err = errors.New("échec de la suppression : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 
 	// retourner une réponse positive
-	err = app.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
+	err = App.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 }
@@ -113,7 +113,7 @@ func (app *application) HDeleteTechnicien(w http.ResponseWriter, r *http.Request
 // Sinon on modifie le technicien portant ce matricule.
 // Les données utilisées proviennent du JSON envoyé par la requête HTTP de méthode POST à cet URL.
 // Le JSON reçu doit correspondre au modèle "TechnicienPayload".
-func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (App *Application) HEditTechnicien(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// récuperer :oldMatricule
 	oldMatricule := ps.ByName("oldMatricule")
@@ -138,7 +138,7 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		err = errors.New("échec lors du décodage du JSON pour l'édition d'un technicien : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 
@@ -154,13 +154,13 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 	technicien.Pays = payload.Pays
 	technicien.DateEmbauche, err = time.Parse("2006-01-02", payload.DateEmbauche)
 	if err != nil {
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 	technicien.Qualification = payload.Qualification
 	technicien.DateQualification, err = time.Parse("2006-01-02", payload.DateQualification)
 	if err != nil {
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 	technicien.Email = payload.Email
@@ -169,24 +169,24 @@ func (app *application) HEditTechnicien(w http.ResponseWriter, r *http.Request, 
 
 	// choix de la requête SQL à exécuter
 	if oldMatricule == "nouveau" {
-		err = app.models.DB.QInsertTechnicien(technicien)
+		err = App.models.DB.QInsertTechnicien(technicien)
 		if err != nil {
-			app.errorJSON(w, err)
+			App.errorJSON(w, err)
 			return
 		}
 	} else {
-		err = app.models.DB.QUpdateTechnicien(oldMatricule, technicien)
+		err = App.models.DB.QUpdateTechnicien(oldMatricule, technicien)
 		if err != nil {
-			app.errorJSON(w, err)
+			App.errorJSON(w, err)
 			return
 		}
 	}
 
 	// retourner une réponse positive
-	err = app.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
+	err = App.writeJSON(w, http.StatusOK, JsonConfirm{OK: true}, "response")
 	if err != nil {
 		err = errors.New("échec de l'envoi JSON : " + err.Error())
-		app.errorJSON(w, err)
+		App.errorJSON(w, err)
 		return
 	}
 }

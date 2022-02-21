@@ -15,23 +15,23 @@ type AppStatus struct {
 }
 
 // HStatus est le handler permettant de consulter l'état du serveur
-func (app *application) HStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func (App *Application) HStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// récupération des variables serveur
 	currentStatus := AppStatus{
 		Status:      "Available",
-		Environment: app.config.env,
+		Environment: App.config.env,
 		Version:     version,
 	}
 
 	// création du json à renvoyer
 	js, err := json.MarshalIndent(currentStatus, "", "\t")
 	if err != nil {
-		app.logger.Println(err)
+		App.logger.Println(err)
 	}
 
 	// envoi du json
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "Application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(js)
 }

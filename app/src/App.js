@@ -2,9 +2,11 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Redirect } from "react-router-dom";
 
 import Home from "./Home/Home";
+
 import InterventionsList from "./Interventions/InterventionsList";
 import InterventionDetails from "./Interventions/InterventionDetails";
 import InterventionEdit from "./Interventions/InterventionEdit";
+
 import TechniciansList from "./Technicians/TechniciansList";
 import TechnicianDetails from "./Technicians/TechnicianDetails";
 import TechnicianEdit from "./Technicians/TechnicianEdit";
@@ -29,11 +31,7 @@ export default function App() {
                 : <LoginPage/>
             }>
 
-
-
             <Route index element={<Home />} />
-
-
 
             <Route path="techniciens" element={<TechniciansList />} />
             <Route path="technicien/:matricule" element={<TechnicianEdit />} />

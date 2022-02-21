@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend-app/models"
+	"api/models"
 	"context"
 	"database/sql"
 	"flag"
@@ -25,9 +25,9 @@ type config struct {
 	}
 }
 
-// application contient la config, l'emplacement d'affichage des logs, et les modèles de données.
+// Application contient la config, l'emplacement d'affichage des logs, et les modèles de données.
 // Elle représente le noyau logique de l'API. Toutes les fonctions de notre programme lui sont greffées.
-type application struct {
+type Application struct {
 	config config
 	logger *log.Logger
 	models models.Models
@@ -52,8 +52,8 @@ func main() {
 	}
 	defer db.Close()
 
-	// app est le noyau logique de notre API
-	app := &application{
+	// App est le nyau logique de notre API
+	App := &Application{
 		config: cfg,
 		logger: logger,
 		models: models.NewModels(db),
@@ -62,7 +62,7 @@ func main() {
 	// srv représente le serveur, il écoute un port et redirige les demandes vers le routeur
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
-		Handler:      app.routes(),
+		Handler:      App.Routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
