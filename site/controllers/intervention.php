@@ -1,4 +1,4 @@
 <?php
-  require_once '../models/intervention.php';
-  $interventions = get_intervention_by_id($_GET['id']);
-  require '../views/intervention.php';
+  require_once 'models/intervention.php';
+  $intervention = get_intervention_by_id($_GET['id']);
+  require_once 'views/intervention.php';

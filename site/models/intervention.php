@@ -1,5 +1,6 @@
 <?php
 function get_intervention_by_id($id){
+  include_once 'db_config.php';
     // se connecter
     $conn=getConnexion();
     
@@ -12,7 +13,7 @@ function get_intervention_by_id($id){
     $stmt->execute();
   
     // demander un retour sous forme de tableau associatif
-    $result = $stmt->setFetchMode(PDO::FETCH_ASSOC);
+    $result = $stmt->fetch();
     
 
     // fermer la connexion
