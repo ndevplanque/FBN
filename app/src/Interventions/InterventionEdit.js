@@ -2,11 +2,11 @@ import React, { useEffect } from 'react'
 import { useParams } from "react-router-dom";
 import {
     TextField, Stack, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Paper, MenuItem, IconButton,
+    TableHead, TableRow, Paper, MenuItem,
 } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import SubmitButtonWithAlert from '../utilities/components/SubmitButtonWithAlert';
-import { jsonToInputDate, jsonToLocaleDate, makeTimeOptions } from '../utilities/functions/datetime';
+import { jsonToLocaleDate, makeTimeOptions } from '../utilities/functions/datetime';
 
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -24,7 +24,7 @@ export default function EditIntervention(props) {
     const [error, setError] = React.useState(null);
     const [errors, setErrors] = React.useState([]);
 
-    const [clientOption, setClientOption] = React.useState([
+    const [clientOption, _] = React.useState([
         { "value": 1, "label": "client plusieurs matériels" },
         { "value": 2, "label": "client un seul matériel" },
         { "value": 3, "label": "client sans matériel" },
@@ -223,9 +223,10 @@ export default function EditIntervention(props) {
                                 <TableHead>
                                     <TableRow>
                                         <TableCell align="left"></TableCell>
+                                        <TableCell align="left">Numéro de contrat</TableCell>
                                         <TableCell align="left">Numéro de série</TableCell>
+                                        <TableCell align="left">Type de matériel</TableCell>
                                         <TableCell align="left">Emplacement</TableCell>
-                                        <TableCell align="left">Prix de vente</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
@@ -239,9 +240,10 @@ export default function EditIntervention(props) {
                                                     onChange={handleChange()}
                                                     onClick={() => { toggleCheckbox("cb" + materiel.n_serie) }} />
                                             </TableCell>
-                                            <TableCell component="th" scope="row">{materiel.n_serie}</TableCell>
+                                            <TableCell component="th" scope="row">{materiel.id_contrat}</TableCell>
+                                            <TableCell align="left">{materiel.n_serie}</TableCell>
+                                            <TableCell align="left">{materiel.reference}</TableCell>
                                             <TableCell align="left">{materiel.emplacement}</TableCell>
-                                            <TableCell align="left">{materiel.prix_vente}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
